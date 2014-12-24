@@ -1,5 +1,8 @@
 package com.molloc.app.entity;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "version")
 public class Version
 {
 	private String version;

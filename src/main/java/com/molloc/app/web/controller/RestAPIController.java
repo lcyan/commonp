@@ -10,19 +10,16 @@ import com.molloc.app.entity.Version;
 
 @RestController
 @RequestMapping("/rest")
-public class RestAPIController
-{
+public class RestAPIController {
 
 	private static final Logger logger = LoggerFactory.getLogger(RestAPIController.class);
 
 	@RequestMapping(value = "/version", method = RequestMethod.GET)
-	public Version showVersion()
-	{
+	public Version showVersion() {
 		Version version = new Version();
 		version.setVersion("V1.0");
 		version.setDescription("first initial project.");
-		if (logger.isDebugEnabled())
-		{
+		if (logger.isDebugEnabled()) {
 			logger.debug("{}", version);
 		}
 		return version;

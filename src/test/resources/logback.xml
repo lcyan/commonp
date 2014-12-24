@@ -29,7 +29,7 @@
 	<logger name="org.springframework.web">
 		<level value="debug" />
 	</logger>
-	<logger name="com.javass.app">
+	<logger name="com.molloc.app">
 		<level value="debug" />
 	</logger>
 	<root>

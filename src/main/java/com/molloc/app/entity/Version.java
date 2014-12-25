@@ -2,9 +2,12 @@ package com.molloc.app.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.validator.constraints.NotBlank;
+
 @XmlRootElement(name = "version")
 public class Version
 {
+	@NotBlank
 	private String version;
 	private String description;
 

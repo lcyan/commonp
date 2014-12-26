@@ -13,7 +13,8 @@
 	<context:property-placeholder ignore-unresolvable="true" location="classpath*:/application.properties" />
 
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-		<property name="basename" value="classpath:/validationMessage" />
+		<property name="basename" value="classpath:ValidationMessage" />
+		<property name="useCodeAsDefaultMessage" value="false"/>
 		<property name="cacheSeconds" value="0" />
 		<property name="defaultEncoding" value="UTF-8" />
 	</bean>

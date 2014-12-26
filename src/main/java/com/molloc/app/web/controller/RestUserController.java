@@ -15,7 +15,6 @@ import com.molloc.app.entity.User;
 @RequestMapping("/user")
 public class RestUserController extends BaseController
 {
-
 	/**
 	 * 
 	 */

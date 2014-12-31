@@ -125,6 +125,33 @@ Git时光机
 		 <4>: $ git cherry-pick F//执行拣选操作将F提交在当前HEAD上重放.
 		 <5>: $ git checkout master //最重要的一步操作,将master分支重置到新的提交ID,切换操作用了reflog语法,即HEAD@{1}相当于切换回master分支前的HEAD指向.
 		 <6>: $ git rest --hard HEAD@{1}
+	case 3:执行将<E>,<F>提交跳过提交<D>,嫁接到提交<C>上.
+		 <1>: $ git rebase --onto C E^ F //需要执行`git checkout master, git reset --hard HEAD@{1}`
+		 		//E^等价于D,并且F和当前的HEAD指向相同,因此可以这样操作,`git rebase --onto C D`
+		 	  $ git rebase --onto C D //不需要重置master
+	case 4:<C>,<D>组合成<CD>复合体,<E>,<F>重新嫁接到<CD>复合体
+		 <1>: $ git checkout C;
+		 <2>: $ git rest --soft HEAD^^//后退两步,以便将C和D融合.
+		 <3>: $ git commit -s -C C//执行提交,提交说明重用C提交的提交说明
+		 <4>: $ git branch newbase//记住上次提交的ID,用里程碑是记忆提交ID的最好办法.
+		 <5>: $ git rebase --onto newbranch E^ master//执行变基操作,将E和F嫁接到newbase上,变基参数直接使用master而不是F,
+		 											 //所以直接修改master分支,而无需在对master进行重置操作.
+		 <6>: $ git tag -d newbase //清理里程碑newbase.已经没说明用处了,所以清除了.
+
+	case 5:执行将<E>,<F>提交跳过提交<D>,嫁接到提交<C>上.
+		 <1>: $ git rebase -i D^//干掉坏蛋D
+		 <2>: $ 编辑变基文件,删除D提交对应的哪一行.保存退出,变基自动开始.
+		 <3>: $git log --pretty=oneline --decorate -6//查看日志,变基成功.
+
+	case 6:<C>,<D>组合成<CD>复合体,<E>,<F>重新嫁接到<CD>复合体
+		 <1>: $ git rebase -i C^//同样执行变基操作,不过因为要将C和D压缩为一个,因此变基从C的父提交开始
+		 <2>: 修改变基文件: 'pick 7311ecb ignore object files.'
+							'squash 908df2 move .gitignore outside also works.'//由原来的pick修改为squash
+							'pick a14c10a add hello.h'
+							'pick 68dc0e4 modify hello.h'
+		 <3>:进入编辑提交说明文件,修改后保存退出,变基自动开始.
+		 <4>: $git log --pretty=oneline --decorate -6//查看日志,变基成功.
+
 /**************************************************************/
 
 $ git cherry-pick //实现提交在新分支上的'重放'
@@ -140,6 +167,38 @@ $ git rebase
 				usage<6>: $ git rebase --continue
 				usage<7>: $ git rebase --skip
 				usage<8>: $ git rebase --abort
+
+				//usage<6>是在变基遇到冲突而暂停的情况下,先完成冲突解决(添加到暂存区,不提交)然后在恢复变基操作的时候使用该命令.
+				//usage<7>是在变基遇到冲突而暂停的情况下,跳过当前提交的时候使用.
+				//usage<8>是在变基遇到冲突而暂停的情况下,终止变基操作,回到之前的分支的时候使用.
+				//<1>,<2>,<3>,<4>用法大致是一样的.
+				//
+				//命令格式: $ git rebase --onto <newbase> <since> <till>
+				//	1.首先执行git checkout 切换到<till>.
+				//	  如果<till>指向的不是一个分支(如master),则变基操作是在detached HEAD(分离头指针)状态进行的,
+				//	  当变基结束后,还要像`git checkout master, git reset --hard HEAD@{1}`对master分支执行重置以实现变基结果在分支中生效.
+				//	2.将<since>..<till>所标识的提交范围写到一个临时文件.
+				//	  <since>..<till>是指包括<till>的所有历史提交排除<since>及<since>的历史提交后形成的版本范围.
+				//	3.将当前分支强制重置(git rest --hard)到<newbranch>
+				//	4.从保存的临时文件中的提交列表中,将提交逐一按顺序重新提交到重置之后的分支上.
+				//	5.如果遇到提交已经在分支中包括,则跳过该提交.
+				//	6.如果在提交过程遇到冲突,则变基过程暂停,用户解决冲突后,执行`git rebase --continue`继续变基操作.
+				//	  或执行`git rebase --skip`跳过此操作.或执行`git rebase --abort`就此终止变基操作切换到变基前的分支上.
+				//
+				//交互式变基:添加 `-i`参数,在变基的时候进入一个交互界面,使用了交互界面的变基操作,不是自动化变基转换为手动确认
+				//那么没有技术含量,而是充满了魔法.
+				//执行交互式变基操作,会将<since>..<till>的提交悉数罗列在一个文件中,然后自动打开一个编辑器来编辑这个文件.可以通过
+				//修改文件的内容设定变基操作,实现删除提交,将多个提交压缩为一个提交,更改提交的顺序,以及更改历史提交的提交说明等.
+				//
+				//reword:r,在变基的时候应用此提交,但是在提交的时候允许用户修改提交说明.
+				//edit:e,在变基的时候应用此提交,但是会在应用后暂停变基,提交用户使用`git commit --amend`执行提交,以便对提交进行修补.
+				//		 当用壶执行`git commit --amend`完成提交后,还需要执行`git rebase --continue`继续变基操作,用户在变基暂停状态下
+				//		 可以执行多次提交,从而实现吧一个提交分解为多个提交.`edit`动作非常强大,对于老版本的git没有reword动作,可以是用
+				//		 edit动作实现相同的效果.
+				//squash:s,该提交会与前面的提交压缩为一个.
+				//fixup:s,类似动作`squash`,但是此提交的提交说明被丢弃,这个功能在Git1.7.0之后开始提供,老版本Git还是使用squash吧.
+				//可以通过修改变基任务文件中各个提交的先后顺序,进而改变最终变基后提交的想先后顺序.
+				//可以修改变基任务文件,删除包含相应的提交的行,这样该提交就不会被应用,进而在变基后的提交中被删除.
 
 $ git rev-parse //是git的一个底层命令,其功能非常丰富,很多git脚本后工具都会用到这条命令.
 

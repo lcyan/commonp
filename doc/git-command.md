@@ -152,6 +152,56 @@ Git时光机
 		 <3>:进入编辑提交说明文件,修改后保存退出,变基自动开始.
 		 <4>: $git log --pretty=oneline --decorate -6//查看日志,变基成功.
 
+Git丢弃历史
+	//使用交互式变基可以完成这样的任务,但是如果历史版本库有成本上千个,把成本上千个版本的变基动作中有pick的修改为fixup可真是费事,实际上有更简便的方法.
+	case 1: $git log --oneline --decorate
+
+			'4631e4a (HEAD, master) modify hello.h'
+			'5ea1148 add hello.h'
+			'4b147db ignore object files.'
+			'62c9772 (tag: hello_1.0, tag: B) Hello world initialized'.
+			'd36c633 (tag: A) RENAME is from welcome.txt.'
+			'e4683ac restore file: welcome.txt.'
+			'c161657 delete trash files. <using: git add -u>'
+			'05111f9 (tag: old_practice) Merge commit \'69b27d7\''
+			'69b27d7 commit in detached HEAD mode.'
+			'198ddb0 does master follow this new commit?'
+			'df98067 which version checked in?'
+			'a24c0ac who does commit?'
+			'97c0580 initialized.'
+
+			//希望把里程碑A(d36c633)之前的历史提交全部清除,可以这样操作:基于里程碑A对应的提交构造一个根提交(即没有父提交的提交)
+			//然后在将master分支在里程碑A之后的提交变基到新的根提交上,实现对历史提交的清除.
+			//
+			//由里程碑A对应的提交构造出一个根提交至少有2中做法:
+			//<1>:使用`git commit-tree`
+			//		查看里程碑A指向的目录树.用A^{tree}语法访问里程碑A对应的目录树.
+			//		$ git cat-file -p A^{tree}
+			//使用`git commit-tree`命令直接从该目录下创建提交
+			//$ echo 'Commit from tree of tag A.' | git commit-tree A^{tree}
+			//<2>:使用`git hash-object`命令,从里程碑A指向的提交建立一个根提交.
+			//	$ git cat-file commit A^0 //用A^0语法访问里程碑A对应的提交.
+			//	将上面的输出(里程碑A指向的提交)过滤掉以parent开头的行,并将结果保存到一个文件中.
+			//	$ git cat-file commit A^0 | sed -e '/^parent/ d' > tmpfile
+			//	运行git hash-object -t commit -w -- tmpfile
+			//	上面执行`git hash-object`命令的输出结果就是写入Git对象库中的新的提交的对象 ID.
+			//	$ git log --pretty=raw ID
+			//
+			//	git rebase ID A master//执行变基,将master里程碑A之后的提交全部迁移到根提交ID上.
+
+反转提交
+			//前面介绍的操作都涉及到对历史的修改,这对于一个人使用git没有问题,但是如果多人协同就会有问题
+			//多人协同使用git,在本地版本库做的提交会通过多人直接的交互成为其他人的一部分,更改历史操作只能
+			//针对自己的版本库,而无法去修改他人的版本库,正所谓'覆水难收'.在这种情况下要想修正一个错误历史提交
+			//的正确做饭是反转提交,即重新做一次提交,相当于用错误的历史提交的反向提交,来修正错误的历史提交.
+			//
+			//Git反向提交的命令:
+
+$ git revert	//Note:Subversion的用户不要想当然地和svn revert命令对应,这两个版本控制系统的revert命令的功能完全不相干.
+				//在不改变这个提交的前提下撤销对其修改.
+
+
+
 /**************************************************************/
 
 $ git cherry-pick //实现提交在新分支上的'重放'

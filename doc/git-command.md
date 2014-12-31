@@ -103,7 +103,43 @@ Git忽略语法:
 		<4>: /TODO		#只忽略此目录下的TODO文件,子目录的TODO文件不忽略.
 		<5>: build/		#忽略所有build/目录下的文件.
 		<6>: doc/\*.txt  #忽略文件如doc/notes.txt 但是文件如 doc/server/arch.txt.不被忽略.
+
+Git时光机
+	<A>--<B>--<C>--<D>--<E>--<F(master)>
+	case 1:移除提交<D>,把<E>,<F>重新嫁接到<C>.
+		<1>: $ git checkout C //执行`git checkout`暂时将HEAD指针切换到C
+		<2>: $ git cherry-pick master^ //执行拣选操作,将E提交在当前HEAD上重放.
+		<3>: $ git cherry-pick master  //将F提交在当前HEAD上重放.
+		<4>: $ git log --pretty=fuller --decorate -2 //通过日志查看,最新2此提交的原始创作时间(AuthorDate)和提交时间(CommitDate)不同.
+													 //AuthorDate是拣选提交的原始更改时间.
+													 //CommitDate是拣选操作时的时间.因此拣选后的新提交的SHA1也不同于所拣选的原提交的SHA1.
+		<5>: $ git checkout master //最重要的一步操作,将master分支重置到新的提交ID,切换操作用了reflog语法,即HEAD@{1}相当于切换回master分支前的HEAD指向.
+		<6>: $ git rest --hard HEAD@{1}
+
+		重新恢复场景: $ git rest --hard F
+	case 2:<C>,<D>组合成<CD>复合体,<E>,<F>重新嫁接到<CD>复合体
+		 <1>: $ git checkout D //暂时将HEAD头指针切换到D.
+		 <2>: $ git rest --soft HEAD^^//后退2步,以便C和D融合.
+		 <3>: $ git ci -C C//执行提交,提交说明重用C提交的提交说明
+		 <3>: $ git cherry-pick E//执行拣选操作将E提交在当前HEAD上重放.
+		 <4>: $ git cherry-pick F//执行拣选操作将F提交在当前HEAD上重放.
+		 <5>: $ git checkout master //最重要的一步操作,将master分支重置到新的提交ID,切换操作用了reflog语法,即HEAD@{1}相当于切换回master分支前的HEAD指向.
+		 <6>: $ git rest --hard HEAD@{1}
 /**************************************************************/
+
+$ git cherry-pick //实现提交在新分支上的'重放'
+				  //是从众多的提交中挑选出一个提交应用在当前的工作分支中.需要一个提交ID作为参数.
+				  //操作过程相当于将该提交导出为补丁文件,然后在当前HEAD上重放,形成无视内容还是提交说明都一致的提交.
+
+$ git rebase
+				usage<1>: $ git rebase --onto <newbase> <since> <till>
+				usage<2>: $ git rebase --onto <newbase> <since>
+				usage<3>: $ git rebase					<since> <till>
+				usage<4>: $ git rebase 					<since>
+				usage<5>: $ git rebase -i ...
+				usage<6>: $ git rebase --continue
+				usage<7>: $ git rebase --skip
+				usage<8>: $ git rebase --abort
 
 $ git rev-parse //是git的一个底层命令,其功能非常丰富,很多git脚本后工具都会用到这条命令.
 
@@ -183,6 +219,7 @@ $ git commit
 			--reset-author //重置作者.
 			-s //在提交说明自动添加上包含提交者姓名和邮件地址的签名标识,类似于Signed-off-by: User Name <email@address>
 			-a //对本地所有变更的文件执行提交操作.包括本地修改的文件和删除的文件,但不包括未被版本库跟踪的文件.
+			-C C//提交说明重用C提交的提交说明.
 $ git clone
 			demo demo-step-1 把demo备份到demo-step-1
 
@@ -306,6 +343,38 @@ $ git blame	//在软件开发的过程当发现bug并定位到具体的代码时
 
 			README
 			-L 6,+5 README	//查看某几行
+
+$ git bisect //是基于版本库的,自动化问题查找和定位工具.取代传统的软件测试中针对软件发布版本的,无法定位到代码的,粗放式的测试方法.
+			 //执行二分查找,在发现问题后,首先要找到一个正确的版本,如果所发现的问题从软件最早的版本句是错的,那么就没有必要执行二分
+			 //查找了,还是老老实实的Debug吧,但是如果能够找到一个正确的版本,记载这个正确的版本上问题没有发生,阿么就可以开始使用
+			 //`git bisect`命令在版本库中进行二分查找了.
+			 <1>: 工作区切换到已知的'好版本'和'坏版本'的中间的一个版本.
+			 <2>: 执行测试,如果问题重现,则将版本库当前版本标记为'坏版本',如果问题没有重现,则将当前版本标记为'好版本'
+			 <3>: 重复<1>-<2>,直至最终找到第一个导致问题出现的版本.
+			 start 开始二分查找
+			 good 标记为好的版本
+			 bad 标记问坏的版本
+			 //最后执行`git checkout bisect/bad`,解决bug提交.
+			 //版本库切回执行二分查找之前所在的分支.
+			 reset
+
+			 @把好提交标记为坏提交怎么办?
+			 	//Git的二分查找提供了一个恢复查找进度的办法.
+			 	//$ git bisect bad
+			 	//用`git bisect log > logfile`查看二分查找的日志记录.
+			 	//编辑logfile,以#号开头的是在注释.删除记录了错误动作的行.
+			 	//结束正在进行的出错的二分查找.`git bisect reset`
+			 	//通过日志文件恢复进度,重启二分查找`git bisect replay logfile`
+			 	//git describe
+			 	//git bisect good
+
+			 //二分查找使用自动化测试
+			 //Git的二分查找支持run子命令,可以运行一个自动化测试脚本.实现自动的二分查找.
+			 //如果脚本的退出码是0,正在测试的版本是一个好版本.
+			 //如果脚本的退出码是125,正在测试的版本被跳过.
+			 //如果脚本的退出码是1到127,125除外,正在测试的版本是一个坏版本.
+			 //git bisect run sh good-or-bad.sh
+			 //git describe refs/bisect/bad
 
 $ git status
 			-s //显示精简输出.

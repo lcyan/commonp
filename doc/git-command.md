@@ -66,6 +66,8 @@ $ git commit --amend --author='Your Name<you@example.com>'
 	1. `.git/refs`是保存引用的命名空间,其中 `.git/refs/heads`目录下的引用又称为分支.
 	2. 对于分支,既可以使用正规的长格式的表示法,eg:`refs/heads/master`,
 				也可以去掉前面的两级目录用`master`来表示.(git rev-parse 用于显示引用对应的提交ID)
+	3. git的大部分命令可以使用提交版本作为参数.(如:git diff <commitid>)
+	4. 有的命令则使用一个版本范围作为参数(如: git log <rev1>..<rev2>)
 HEAD 当前版本库的头指针
 符号^可以指代父提交
 	1. `HEAD^`代表版本库中的上一次提交,即最近一次提交的父提交.
@@ -100,9 +102,51 @@ Git忽略语法:
 		<3>: !lib.a		#但是lib.a文件或目录不要忽略,即使前面设置了对*.a的忽略.
 		<4>: /TODO		#只忽略此目录下的TODO文件,子目录的TODO文件不忽略.
 		<5>: build/		#忽略所有build/目录下的文件.
-		<6>: doc/*.txt  #忽略文件如doc/notes.txt 但是文件如 doc/server/arch.txt.不被忽略.
-**************************************************************
-$ git archive 
+		<6>: doc/\*.txt  #忽略文件如doc/notes.txt 但是文件如 doc/server/arch.txt.不被忽略.
+/**************************************************************/
+
+$ git rev-parse //是git的一个底层命令,其功能非常丰富,很多git脚本后工具都会用到这条命令.
+
+				--git-dir	//显示git版本库的位置.
+				--show-cdup	//当前工作区目录的深度.
+				--parseopt  //可以被Git无关的应用用于解析命令行参数.
+				--symbolic --branches	//显示分支.
+				--symbolic --tags	//显示里程碑.
+				--symbolic --glob=refs/\*	//显示定义的所有引用.
+				<git_object_express>	//可以将一个git对象表达式表示为对应的SHA1.支持显示多个表达式的SHA1.
+										//eg:git rev-parse master refs/heads/master
+										//	 git rev-parse A refs/tags/A 	(里程碑A实际上指向的是一个Tag对象而非提交,用以下命令显示提交而非里程碑对象)
+										//		git rev-parse A^{} A^0 A^{commit}
+										//	 git rev-parse 4443 332555(ID的前几位)
+				//'^'代表父提交.当一个提交有多个父提交时,可以通过在符号'^'后面跟上一个数字表示第几个父提交.
+				//'A^' <=> 'A^1'
+				//而'B^0'代表了B所指向的一个commit对象(因为B是Tag对象)
+				//eg: git rev-parse A^ A^1 B^0
+
+				A^{tree} :A 	//显示里程碑A对应的目录树
+				A^{tree}:src/MakeFile A:src/MakeFile //显示树里面的文件.
+				:gitg.png	HEAD:gitg.png	//暂存区里的文件和HEAD中的文件相同.
+				:\/'Commit A'	//还可以通过提交日志中查找字符串的方式显示提交
+				HEAD@{0} master@{0} //reflog中的语法
+
+$ git rev-list //版本范围表示法
+
+				--oneline	A 	//一个提交ID实际上就可以代表一个版本列表.含义是该版本开始的所有历史提交.
+				--oneline	D 	F 	//相当于每个版本单独使用时指代列表的并集.
+				--oneline	^G 	D 	//在一个版本前面加上符号'^'含义是取反,即排除这个版本及其历史记录.
+				--oneline 	G..D 	//和上面等价的'点点'表示法,使用两个点连接连个版本eg:'G..D'就相当于'^G D'
+				//版本取反参数的顺序不重要,但是'点点'表示法前后的版本顺序很重要.
+					//syntax:^B C 	等价于 C ^B
+					//syntax:B..C 	不等价于 C..B
+
+			   --oneline	B...C
+			   //三点表示法的含义是两个版本共同能够访问到的除外,eg:'B...C'将B和C共同能过访问到的F,I,J排除在外.
+			   //两个版本的前后顺序没有关系.实际上r1...r2相当于'r1 r2 --not' $(git merge-base --all r1 r2).
+			   //
+			   --oneline	B^@		//某提交的历史提交,自身除外,用语法'r1^@'
+			   --oneline 	B^!		//提交本身不包括其历史提交,用语法'r1^!'
+
+$ git archive
 				-o latest.zip HEAD //基于最新的提交建立归档文件.
 				-o partial.tar HEAD src doc //只将目录src和doc建立到归档partial.tar中.
 				--format=tar --prefix=1.0/ v1.0 | gzip > foo-1.0.tar.gz //基于里程碑V1.0建立归档,并且为归档中的文件添加目录前缀1.0
@@ -117,6 +161,16 @@ $ git log
 			--fuller //显示作者,提交者,提交信息.
 			--stat   //可以看到每次提交的文件变更统计.
 			--oneline --decorate -4 //--decorate 可以在提交ID的旁边显示该提交关联的引用(里程碑或分支).
+			--oneline F^! D 	//显示F本身的提交和D以及D提交历史的并集.
+			--graph		//显示分支图
+			-<n> 	//n为数字,显示最近<n>条记录.
+			-p 		//在显示日志的时候同时显示改动.
+			--stat 	//显示每次提交的变更概要.
+			--pretty=raw 	//显示commit的原始数据,可以显示提交对应的树ID.
+			--pretty=fuller //会同时显示作者和提交者.两者可以不同.
+
+$ git show 	//如果只查看和分析某一个提交,可以使用git show/git cat-file
+			D --stat //显示里程碑D及其提交.
 
 $ git describe //的输出可以作为软件的版本号,因为这样可以很容易地实现将发布的软件包版本和版本库中的代码对应在一起.
 			   //当发现软件包Bug时,可以最快,最准确的对应到代码上.
@@ -129,7 +183,7 @@ $ git commit
 			--reset-author //重置作者.
 			-s //在提交说明自动添加上包含提交者姓名和邮件地址的签名标识,类似于Signed-off-by: User Name <email@address>
 			-a //对本地所有变更的文件执行提交操作.包括本地修改的文件和删除的文件,但不包括未被版本库跟踪的文件.
-$ git clone 
+$ git clone
 			demo demo-step-1 把demo备份到demo-step-1
 
 $ git add
@@ -163,7 +217,7 @@ $ git stash //保存当前的工作进度,会分别对暂存区和工作区的�
 
 			branch <branchname> <stash>
 				 //基于进度创建分支.
-		
+
 $ git checkout //改命令的实质就是修改HEAD本身的指向,该命令不会影响分支'游标'(如:master),这条命令会重写工作区.
 
 	用法:<1>:`git checkout [-q] [<commit>] [--] <paths>...`
@@ -180,8 +234,8 @@ $ git checkout //改命令的实质就是修改HEAD本身的指向,该命令不�
 					 <2>所以用法<2>最主要的作用就是切换分支.如果省略<branch>则相当于对工作区进行状态检查.
 					 <3>主要用于创建和切换到新的分支(<new_branch>),新的分支从<start_point>指定的提交开始创建.新分支和我们熟悉的
 					 <3>master分支没有什么实质的不同,都是refs/heads命名空间下的引用.
-	
-	NOTE: $ git checkout branch 
+
+	NOTE: $ git checkout branch
 			//检出branch分支.(更新HEAD以指向branch分支,以及用branch指向的树更新暂存区和工作区)
 		  $ git checkout
 		    //汇总显示工作区,暂存区与HEAD的差异.
@@ -196,7 +250,7 @@ $ git checkout //改命令的实质就是修改HEAD本身的指向,该命令不�
 			//git checkout 命令后的参数为一个`.`,这条命令最危险!会取消所有本地的修改(相对于暂存区).相当于用暂存区的所有文件直接覆盖本地文件,
 			//不给用户确认的机会.
 
-$ git reset 
+$ git reset
 			--hard //NOTE:会破坏工作区未提交的改动,慎用.//eg:`git reset --hard HEAD^/git reset --hard <commitid>` 相当于将master重置到上一个老的提交上.
 					master@{2} //master分支之前的第2次改变的SHA1
 
@@ -217,7 +271,7 @@ $ git reset
 			--soft <commit> 会执行动作{1}.
 
 			--mixed <commit> (默认为--mixed),会执行动作{1},{2}.
-			
+
 			{1}:替换引用的指向.引用指向新的提交ID.
 			{2}:替换暂存区.替换后,暂存区的内容和引用指向的目录树一致.
 			{3}:替换工作区.替换后,工作区的内容变得和暂存区一致,也和HEAD所指向的目录树一致.
@@ -234,12 +288,26 @@ $ git reset
 								<2>则会重置引用,根据不同的选项,可以对暂存区或工作区进行重置.
 
 $ git diff
+			//扩展了GNU的差异比较语法,提供了对重命名,二进制文件,文件权限变更的支持.
 			//看到修改后的文件与版本库中的文件的差异.(Note:与本地比较的不是版本库中的文件,而是一个中间状态的文件.)
 			//Note:显示工作区的最新改动,即工作区与提交任务(提交暂存区,stage)中相比的差异.
 			HEAD //将工作区(当前工作分支)相比,会看到更多差异.
 			--cached/--staged //看到的是提交暂存区(提交任务,stage(Note:.git目录下的index文件(用于跟踪工作区文件的)))和版本库中文件的差异.
+			B A 	//比较里程碑B和里程碑A
+			A 		//比较工作区和里程碑A
+			--cached A 	//比较暂存区和里程碑A
+			no args		//比较工作区和暂存区
+			--cached 	//比较暂存区和HEAD
+			HEAD 		//比较工作区和HEAD
+			<commit1> <commit2> --<paths> //显示不同版本间该路径下文件的差异.
+			--word-diff 	//逐词比较.
 
-$ git status 
+$ git blame	//在软件开发的过程当发现bug并定位到具体的代码时,Git的文件追溯命令可以指出是谁在什么时候,以及什么版本引入此bug.
+
+			README
+			-L 6,+5 README	//查看某几行
+
+$ git status
 			-s //显示精简输出.
 			-b //显示当前工作分支的名称.
 			--ignore //会在状态显示中看到被忽略的文件.

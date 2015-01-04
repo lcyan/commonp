@@ -348,4 +348,80 @@ NOTE:合并操作的大多数情况,只需提供一个<commit>(提交ID或对应
 	    8>:向服务器推送
 	    $ git push
 
+@@合并策略
+Git合并操作支持很多合并策略,默认会选择最合适的合并策略,例如,和一个分支
+进行合并是会选择recursive合并策略,当和两个或两个以上的其他分支合并时
+采用octopus合并策略,可以通过传递参数使用知道的合并策略.
 
+$ git merge [-s <strategy>] [-X <strategy-option>] <commit>...
+
+其中参数 -s 用于设定合并策略,参数-X用户为所选的合并策略提交附近的参数.
+下面分别介绍不同的合并策略:
+(1):resolve
+	该合并策略只能用于合并两个头(即当前分支和另外一个分支)使用三向合并策略.
+	这个合并策略被认为是最安全,最快的合并策略.
+(2):recursive
+	该合并策略只能用于合并两个头(即当前分支和另外一个分支)使用三向合并策略.
+	这个合并策略是合并两个头指针时的默认合并策略.
+	当合并的头指针拥有一个以上的祖先的时候,会针对多个公共祖先创建一个合并的树,
+	并以此作为三向合并的参照.这个合并策略被认为可以实现冲突的最小化,而且可以发现
+	和处理由于重命名导致的合并冲突.
+	这个合并策略可以使用下列选项:
+	--ours:在遇到冲突的时候,选择我们的版本(当前分支的版本)而忽略他人的版本.如果他人
+	的改动和本地改动不冲突,会将他们的改动合并进来.
+	Note:不要将此模式和后面介绍的单纯的ours合并策略相混淆,后面介绍的ours合并策略
+	直接丢弃其他分支的变更,无论冲突与否.
+	--theirs
+	和ours选项相反,遇到冲突时选择他人的版本,丢弃我们的版本.
+	--subtree[=path]
+	这个选项使用子树合并策略,比下面介绍的subtree(子树合并)策略的定制能力更强.
+	下面的subtree合并策略要对两个树的目录移动进行猜测.而recursive合并策略可以通过
+	此参数直接对子树目录进行设置.
+(3):octopus
+	可以合并两个以上的头指针,但是拒绝执行需要手动解决的复杂合并,主要的用途是将多个
+	主题分支合并到一起.这个合并策略是对三个及三个以上的头指针进行合并时的默认合并策略.
+(4):ours
+	可以合并任意数量的头指针,但是合并的结果总是使用当前分支的内容,丢弃其他分支的内容.
+(5):subtree
+	这是一个经过调整的recursive策略,当合并树A和B时,如果B和A的一个子树相同,B首先进行调整
+	以匹配A的树的结构,以免两颗树在同一级别进行合并.同事也针对两个树的共同祖先进行调整.
+
+@@合并的相关设置
+
+可以通过git config 命令设置与合并相关的配置变量,对合并进行配置.
+(1):merge.conficstyle
+	该配置变量定义冲突文件中冲突的标记风格.有两个可用的风格.默认的'merge'或'diff3'
+	默认的'merge'风格使用标准的冲突分界符(<<<<<<<=======>>>>>>>)对冲突的内容进行标识.
+	其中的两个文字块分别是本地的修改和他人的修改.
+	如果使用'diff3'风格,则会在冲突中出现三个文字块,分别是<<<<<<<和|||||||之间的本地
+	更改版本,||||||和=======之间的原始(共同祖先)版本和======和>>>>>>>之间的是他人更改的版本.
+	User1 hacked.
+	<<<<<<<< HEAD
+	Hello user2.
+	||||||| merged common ancestors
+	Hello
+	==========
+	Hello user1.
+	>>>>>>>> a4343435347fd323ac324324
+	User2 hacked.
+	User2 hacked again.
+(2):merge.tool
+	设定执行`git mergetool`进行冲突解决时调用的图形化工具,配置变量'merge.tool'可以设置为如下
+	内置支持的工具:'kdiff3','tkdiff','meld','meld','xxdiff','emerge','vimdiff','gvimdiff',
+	'p4merge','opendiff'
+	$ git config --global merge.tool kdiff3
+
+	如果将merge.tool设置为其他值,则使用自定义工具进行冲突解决.自定义工具需要通过mergetool.<tool>.cmd
+	对自定义工具的命令行进行设置.
+(3):mergetool.<tool>.path
+	如果git mergetool支持的冲突解决工具安装在在特殊位置,可以使用mergetool.<tool>.path对工具<tool>的
+	安装位置进行设置.
+	$ git config --global mergetool.kdiff3.path /path/to/kdiff3
+(4):mergetool.<tool>.cmd
+	如果所用的冲突解决工具不在内置的工具列表中,还可以使用mergetool.<tool>.cmd对自定义工具的命令行
+	进行设置,同时要将merge.tool设置为<tool>
+	$ git config --global merge.tool mykdiff3
+	$ git config --global mergetool.mykdiff3.cmd '/usr/bin/kdiff3 -L1 "$MERGED (Base)" -L2 "$MERGED (Local)"
+	-L3 "$MERGED (Remote)" --auto -o "$MERGED" "$BASE" "$LOBAL" "$REMOTE"'
+(5):merge.log
+	是否在合并提交的提交说明中包含合并提交的概要信息,默认为false

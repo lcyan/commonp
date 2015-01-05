@@ -22,7 +22,7 @@ public class RestExceptionHandler
 
 	/**
 	 * 处理RestException.
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@ExceptionHandler(value = { RestException.class })
 	public final void handleException(RestException ex, HttpServletRequest request, HttpServletResponse response) throws Exception

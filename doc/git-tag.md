@@ -197,7 +197,7 @@ $ git --git-dir=/path/to/user2/workspace/hello-world config user.email user2@mol
 	$ yum install -y gunpg
 	(1)先创建一个空提交
 	$ git commit --allow-empty -m 'blank commit for GnuPG-signed tag test.'
-	(2)直接在刚创建的空提交上创建一个代签名的里程碑mytag3可能会保存.
+	(2)直接在刚创建的空提交上创建一个带签名的里程碑mytag3可能会保存.
 	$ git tag -s -m 'My first GPG-signed tag.' mytag3
 	>>gpg: skipped "user1 <user1@molloc.com>": No secret key
 	>>gpg: signing failed: No secret key

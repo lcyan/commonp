@@ -221,4 +221,240 @@ $ git --git-dir=/path/to/user2/workspace/hello-world config user.email user2@mol
 	>>pub   2048R/22C76F3A 2015-01-05
 	>>uid                  user1 <user1@molloc.com>
 	>>sub   2048R/EDB1E9FD 2015-01-05
+	$ git tag -s -m 'My first GPG-signed tag.' mytag3
+	和带说明的里程碑一样,在Git对象库中也建立了一个tag对象,查看该tag对象可以卡卡南道其中包含的GnuPG签名.
+	>>object 658eebd9a6583015434a8fdcd29b471e57acc62e
+	>>type commit
+	>>tag mytag3
+	>>tagger user1 <user1@molloc.com> 1420472883 +0800
 
+	>>My first GPG-signed tag.
+	>>-----BEGIN PGP SIGNATURE-----
+	>>Version: GnuPG v2.0.14 (GNU/Linux)
+
+	>>iQEcBAABAgAGBQJUqrIzAAoJEBBicIgix286KdMH/0PLYXJoq6Hz8V0/MKnKr71h
+	>>lGCzUPsIimmgtTk17NwxtFXj+fS0obQQ7AIi6a0vz80eoQ3ZUuMuRmgPFx7vurkj
+	>>22FdwoZZxxXqF/dByqA8NHqzHWGtu6Fi8usj0H3teRbtvveCkG/7QU4UhgrlwfZ0
+	>>1AIGw/N2F53bPnQRrIpG6eaahic664prbCwvi4Gqfk1/soytCxIF0XIpgJdpqKU7
+	>>6JHLY+5mO7VhZVOImQywTWuGazXtWo5BTeNhwLwmz20K4QLdgXescRGIdtRLsf20
+	>>AzcBmxOUe3H4rJZZXEAYNN4k5MC4/d+np8jMgVeoPXZ47UT/a31UAzUQtY+3MD0=
+	>>=lcbA
+	>>-----END PGP SIGNATURE-----
+	要验证签名的有效性,如果直接使用gpg命令会比较麻烦,因为需要将这个文件拆分为两个,一个是不包含
+	签名的里程碑内容,另外一个是签名本身,还好可以使用命令git tag -v来验证里程碑签名的有效性.
+	$ git tag -v mytag3
+	>>object 658eebd9a6583015434a8fdcd29b471e57acc62e
+	>>type commit
+	>>tag mytag3
+	>>tagger user1 <user1@molloc.com> 1420472883 +0800
+
+	>>My first GPG-signed tag.
+	>>gpg: Signature made Mon 05 Jan 2015 11:48:03 PM CST using RSA key ID 22C76F3A
+	>>gpg: Good signature from "user1 <user1@molloc.com>"
+
+@@
+删除里程碑:
+	如果里程碑建立在错误的提交上,或者对里程碑的命名不满意,可以删除里程碑,删除里程碑使用
+	命名`git tag -d`西面用命令删除里程碑mytag.
+	$ git tag -d mytag
+	>>Deleted tag 'mytag' (was aebc86c)
+	里程碑没有类似reflog的变更记录机制,一旦删除了不易恢复,慎用,在删除里程碑mytag的命令
+	输出中,会显示该里程碑所对应的提交ID,一旦发现删除错误,赶紧补救还来得及,下面的命令实现
+	对里程碑mytag的重建.
+	$ git tag mytag aebc86c
+
+	Git没有提供对里程碑重命名的命令,如果对里程碑名字不满意的话,可以删除旧的里程碑,然后重新
+	用新的名字创建里程碑.
+	为什么没有提供重命名里程碑的命令呢?按理只要将.git/refs/tags下的引用的文件改名就可以了
+	.这是因为里程碑的名字不但反应在.git/refs/tags引用目录下的文件名,而且对于带说明或签名的
+	里程碑,里程碑的名字还反应在tag对象的内容中.尤其是带签名的里程碑,如果修改里程碑的名字,不但
+	里程碑对象内容势必要变化,而且里程碑也要重新进行签名.这显示难以实现.
+
+	`git filter-branch`命令实现对里程碑自动重命名方法,但是那个方法也不能毫发无损地实现对
+	签名里程碑的重命名,被重命名的签名里程碑中的签名会被去除,从而成为带说明的里程碑.
+
+@@不要随意更改里程碑.
+	里程碑建立后,如果需要更改,可以使用同样的里程碑名称重新建立,不要需要加上-f或--force
+	参数强制覆盖已有的里程碑.
+	更改里程碑要慎用,一个原因是里程碑从概念上将是对历史提交的一个标记,不应该随意变动.
+	另外一个原因是里程碑一旦被他人同步,如果修改里程碑,已经同步该里程碑的用户并不会自动
+	更新,这就导致一个相同名称里程碑在不同用户的版本库中的指向不同.
+
+@@共享里程碑
+	现在看看用户user1的工作区状态,可以看出现在的工作区相比上游有三个新的提交.
+	$ git status
+	>>On branch master
+	>>Your branch is ahead of 'origin/master' by 3 commits.
+	>>  (use "git push" to publish your local commits)
+	>>nothing to commit, working directory clean
+	那么如果执行`git push`命令向上游推送,会将本地创建的三个里程碑推送到上游吗?
+	想上游推送.
+	$ git push
+	>>Counting objects: 3, done.
+	>>Compressing objects: 100% (3/3), done.
+	>>Writing objects: 100% (3/3), 463 bytes | 0 bytes/s, done.
+	>>Total 3 (delta 1), reused 0 (delta 0)
+	>>To file:///root/source/gitrepo/hello-world.git
+    >>d901dd8..658eebd  master -> master
+    通过执行`git ls-remote`可以查看上游版本库的引用,会发现本地建立的三个里程碑,并没有
+    推送到上游.
+    $ git ls-remote orgin my*
+    创建的里程碑,默认只在本地版本库中可见,不会因为对分支执行推送而将里程碑也推送到
+    远程版本库.这样的设计显然更为合理,否则的话,每个用户本地创建的里程碑都自动向
+    上游推送,那么上游的里程碑将有多么杂乱,而且不用用户创建的相同名称的里程碑会相互
+    覆盖.
+
+    <1>:显示推送以共享里程碑
+    如果用户确实需要将某些本地建立的里程碑推送到远程版本库.需要在`git push`中
+    明确地表示出来.下面在用户user1的工作区中执行命令,将mytag里程碑共享到上游版本库.
+    $ git push origin mytag
+    >>Total 0 (delta 0), reused 0 (delta 0)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>> * [new tag]         mytag -> mytag
+	如果需要将本地建立的所有里程碑全部推送到远程版本库,可以使用通配符.
+	$ git push origin refs/tags/\*
+	>>Counting objects: 2, done.
+	>>Compressing objects: 100% (2/2), done.
+	>>Writing objects: 100% (2/2), 681 bytes | 0 bytes/s, done.
+	>>Total 2 (delta 0), reused 0 (delta 0)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>> * [new tag]         mytag2 -> mytag2
+	>> * [new tag]         mytag3 -> mytag3
+	再用命令`git ls-remote`查看上游版本库的引用,会发现本地建立的三个里程碑,已经能够
+	在上游中看到了.
+	$ git ls-remote origin my*
+	>>aebc86c490cd68614a6c2ee8a797c97c83a2bdb1	refs/tags/mytag
+	>>34ca4ca0cc4ed8a69491935135937b626c711ac3	refs/tags/mytag2
+	>>5c2b1f0872594d77471308eb68788c061848a7aa	refs/tags/mytag2^{}
+	>>9c463b68319543b3e3ddcc736bd6a4abf9218f9a	refs/tags/mytag3
+	>>658eebd9a6583015434a8fdcd29b471e57acc62e	refs/tags/mytag3^{}
+	用户从版本库执行拉回操作,会自动获取里程碑么?
+	用户user2的工作区中如果执行`git fetch`或`git pull`操作,能自动将用户user1推送到
+	共享版本库中的里程碑获取到本地版本库吗?
+	$ cd/path/to/user2/workspace/hello-world
+	执行git pull,从上游版本库中获取提交.
+	$ git pull
+	remote: Counting objects: 5, done.
+	>>remote: Compressing objects: 100% (5/5), done.
+	>>remote: Total 5 (delta 1), reused 0 (delta 0)
+	>>Unpacking objects: 100% (5/5), done.
+	>>From file:///root/source/gitrepo/hello-world
+	>>   d901dd8..658eebd  master     -> origin/master
+	>> * [new tag]         mytag3     -> mytag3
+	>> * [new tag]         mytag      -> mytag
+	>> * [new tag]         mytag2     -> mytag2
+	>>Updating d901dd8..658eebd
+	>>Fast-forward
+	可见执行`git pull`操作,能够在获取远程共享版本库的提交的同事,获取新的里程碑.
+	$ git tag -n1 -l my*
+	>>mytag           blank commit.
+	>>mytag2          My first annotated tag.
+	>>mytag3          My first GPG-signed tag.
+	?里程碑变更能自动同步吗?
+	里程碑可以强制更新,当里程碑改变后,已经获取到里程碑的版本库再次使用获取或拉回操作.
+	能够自动更新里程碑吗?答案是不能,可以看看下面的操作.
+	1>用户user2强制更新里程碑mytag2
+	$ git tag -f -m 'user2 update this annotated tag.' mytag2 HEAD^
+	>>Updated tag 'mytag2' (was 34ca4ca)
+	2>里程碑mytag2已经是不同的对象了.
+	$ git cat-file -p mytag2
+	>>object 5c2b1f0872594d77471308eb68788c061848a7aa
+	>>type commit
+	>>tag mytag2
+	>>tagger user2 <user2@molloc.com> 1420553545 +0800
+
+	>>user2 update this annotated tag.
+
+	3>为了更改远程共享服务器中的里程碑,需要需要显示推送,即在推送时写上要推送的里程碑名称.
+	$ git push origin mytag2
+	>>To file:///root/source/gitrepo/hello-world.git
+	>> ! [rejected]        mytag2 -> mytag2 (already exists)
+	>>error: failed to push some refs to 'file:///root/source/gitrepo/hello-world.git'
+	>>hint: Updates were rejected because the tag already exists in the remote.
+	$ git push -f origin mytag2
+	>>Counting objects: 1, done.
+	>>Writing objects: 100% (1/1), 168 bytes | 0 bytes/s, done.
+	>>Total 1 (delta 0), reused 0 (delta 0)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>> + 34ca4ca...876f9ce mytag2 -> mytag2 (forced update)
+	4>切换到用户user1的工作区,执行拉回操作,没有获取到新的里程碑.
+	$ git pull
+	>>Already up-to-date.
+	5>用户user1必须显式地执行拉回操作,即要在`git pull`的参数中使用引用表达式.
+	所谓引用表达式就是用冒号分割的引用名称或通配符,用在这里代表用户远程共享
+	版本库的引用refs/tags/mytag2覆盖本地同名引用.
+	$ git pull orgin refs/tags/mytag2:refs/tags/mytag2
+	>>remote: Counting objects: 1, done.
+	>>remote: Total 1 (delta 0), reused 0 (delta 0)
+	>>Unpacking objects: 100% (1/1), done.
+	>>From file:///root/source/gitrepo/hello-world
+	>> - [tag update]      mytag2     -> mytag2
+	>>Already up-to-date.
+
+@@关于里程碑的共享和同步操作,看似很繁琐,但是用心体会就会感觉到Git关于里程碑的共享的设计是非常
+合理人性化的.
+	(1):里程碑共享,必须显式的推送.即在推送命令的参数中.标明要推送的那个里程碑.
+	显式推送是防止用户随意推送里程碑导致共享版本库中里程碑泛滥的情况.当然还可以参考
+	`Gitolite服务架设`为共享版本库添加授权,值允许部分用户向服务器推送里程碑.
+	(2):执行获取或拉回操作,自动从远程版本库获取新里程碑,并在本地版本库中创建.
+	获取或拉回操作,只会将获取的远程分支所包含的新里程碑同步到本地,而不会将
+	远程版本库的其他分支中的里程碑获取到本地.这既方便了里程碑的取得.又防止本地
+	里程碑因同步远程版本库而泛滥.
+	(3):如果本地已有同名的里程碑,默认不会从上游同步里程碑,即时两者里程碑的指向是不同的.
+	理解这一点非常重要,这也就要求里程碑一旦共享.就不要在修改.
+
+@@删除远程版本库中的里程碑.
+	假如向远程版本库推送里程碑后,忽然发现里程碑创建在了错误的提交上.为了防止其他人获取到错误
+	的里程碑.应该尽快将里程碑删除.
+	删除本地里程碑非常简单,使用`git tag -d <tagname>`就可以了,但是如何撤销已经推送到远程
+	版本库的里程碑呢?需要登陆到服务器上吗?或者需要麻烦管理员?不必,可以直接在本地版本库
+	执行命令删除远程版本库中的里程碑.
+	命令: git push <remote_url> :<tagname>
+	该命令的最后一个参数实际上是一个引用表达式,引用表达式一般的格式是:<refs>:<ref>.
+	该推送命令使用的是引用表达式冒号前的引用被省略,其含义是将一个空值推送到
+	远程版本库对应的引用中.亦即删除远程版本库中的相关的引用.这个命令不但可以用于删除
+	里程碑.还可以删除远程版本库中的分支.
+	(1):用户user1 执行推送操作删除远程共享版本库中的里程碑.
+	$ git push origin :mytag2
+	>>To file:///root/source/gitrepo/hello-world.git
+    >>- [deleted]         mytag2
+
+@@里程碑的命名规范
+	在正式项目的版本库管理中,要为里程碑创建订立一些规则:
+	1.对创建里程碑进程权限控制.
+	2.不要使用轻量级里程碑(只用于本地临时性的里程碑)而是要使用带说明的里程碑.甚至
+	要求必须使用带签名的里程碑.
+	3.如果使用带签名的里程碑,可以考虑设置专用账户,使用专用的私钥创建签名.
+	4.里程碑的命名要使用统一的风格,并很容易和最终产品显示的版本号相对应.
+	5.不要以`-`开头,以免在命令行中被当成命令的选项.
+	6.可以包含路径分隔符`/`但是路径分隔符不能位于最后.
+	使用路径分隔符创建tag实际上会在引用目录下创建子目录.例如名为`demo/v1.2.1`的里程碑
+	就会创建目录`.git/refs/tags/demo`并在该目录下创建引用文件v1.2.1
+	7.不能出现两个连续的`..`.因为两个连续的点被用于表示版本范围,当然更不能是用`...`
+	8.如果在里程碑命名中是用了路径分隔符`/`,就不能在任何一个分隔路径中以点`.`开头.
+	这是因为里程碑在用简写格式表达式时,可能造成以一个点`.`开头这样的引用名称在用
+	作版本范围的最后一个版本时,本来两点操作变成了三点操作符.从而造成歧义.
+	9.不能在里程碑名称的最后出现`.`否则作为第一个参数出现在表示版本范围的表达式中时,
+	本来版本范围表达式可能用的是两点操作符,结果被误做三点操作符.
+	10.不能使用特殊字符:eg:'~','^',':','?','*','[',以及字符\177(删除字符)或小于
+	\040(32)的Ascii码都不能使用.
+	11.不能以'.lock'结尾,因为'.lock'结尾的文件是里程碑操作过程中的临时文件.
+	12.不能包含'@{'字串,否则易和'@{<num>'(reflog)语法相混淆.
+	13.不能包含反斜线'\\'.因为反斜线用于命令或shell脚本会造成意外.
+	Git还专门为检查引用名称是否符合规范提供了一个命令:`git check-ref-format`.
+	若该命令返回值为0,则引用名称符合规范.若返回值为1,则不符合规范.
+	$ git check-ref-format refs/tags/.name || echo "返回 $? 不合法"
+
+@@linux的里程碑.
+	$ git ls-remote --tags git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6-stable.git v2.6.36*
+
+	以-rc<num>为后缀的是先于正式版发布的预发布版本.
+
+	正式版发布就去掉了-rc后缀
+
+@@Android项目
+	同一个项目要在里程碑命名上遵照统一标准,并能够和软件的版本号正确地对应.
+
+	(1):Android项目中的里程碑命名,会发现其里程碑的命名格式android-<大版本号>_r<小版本号>
+	$ git ls-remote --tags git://android.git.kernel.org/platform/manifest.git android-2.2*
+	(2):里程碑的创建过程中使用了专用账号和GnuPG签名.

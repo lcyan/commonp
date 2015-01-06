@@ -389,7 +389,7 @@ $ git merge [-s <strategy>] [-X <strategy-option>] <commit>...
 @@合并的相关设置
 
 可以通过git config 命令设置与合并相关的配置变量,对合并进行配置.
-(1):merge.conficstyle
+(1):merge.conflicstyle
 	该配置变量定义冲突文件中冲突的标记风格.有两个可用的风格.默认的'merge'或'diff3'
 	默认的'merge'风格使用标准的冲突分界符(<<<<<<<=======>>>>>>>)对冲突的内容进行标识.
 	其中的两个文字块分别是本地的修改和他人的修改.

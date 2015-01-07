@@ -301,7 +301,7 @@ $ git --git-dir=/path/to/user2/workspace/hello-world config user.email user2@mol
     $ git ls-remote orgin my*
     创建的里程碑,默认只在本地版本库中可见,不会因为对分支执行推送而将里程碑也推送到
     远程版本库.这样的设计显然更为合理,否则的话,每个用户本地创建的里程碑都自动向
-    上游推送,那么上游的里程碑将有多么杂乱,而且不用用户创建的相同名称的里程碑会相互
+    上游推送,那么上游的里程碑将有多么杂乱,而且不同用户创建的相同名称的里程碑会相互
     覆盖.
 
     <1>:显示推送以共享里程碑
@@ -345,7 +345,7 @@ $ git --git-dir=/path/to/user2/workspace/hello-world config user.email user2@mol
 	>> * [new tag]         mytag2     -> mytag2
 	>>Updating d901dd8..658eebd
 	>>Fast-forward
-	可见执行`git pull`操作,能够在获取远程共享版本库的提交的同事,获取新的里程碑.
+	可见执行`git pull`操作,能够在获取远程共享版本库的提交的同时,获取新的里程碑.
 	$ git tag -n1 -l my*
 	>>mytag           blank commit.
 	>>mytag2          My first annotated tag.
@@ -380,7 +380,7 @@ $ git --git-dir=/path/to/user2/workspace/hello-world config user.email user2@mol
 	4>切换到用户user1的工作区,执行拉回操作,没有获取到新的里程碑.
 	$ git pull
 	>>Already up-to-date.
-	5>用户user1必须显式地执行拉回操作,即要在`git pull`的参数中使用引用表达式.
+	5>用户user1必须显式地执行拉回操作,即要在`git pull`的参数中使用`引用表达式`.
 	所谓引用表达式就是用冒号分割的引用名称或通配符,用在这里代表用户远程共享
 	版本库的引用refs/tags/mytag2覆盖本地同名引用.
 	$ git pull orgin refs/tags/mytag2:refs/tags/mytag2
@@ -395,12 +395,12 @@ $ git --git-dir=/path/to/user2/workspace/hello-world config user.email user2@mol
 合理人性化的.
 	(1):里程碑共享,必须显式的推送.即在推送命令的参数中.标明要推送的那个里程碑.
 	显式推送是防止用户随意推送里程碑导致共享版本库中里程碑泛滥的情况.当然还可以参考
-	`Gitolite服务架设`为共享版本库添加授权,值允许部分用户向服务器推送里程碑.
+	`Gitolite服务架设`为共享版本库添加授权,只允许部分用户向服务器推送里程碑.
 	(2):执行获取或拉回操作,自动从远程版本库获取新里程碑,并在本地版本库中创建.
 	获取或拉回操作,只会将获取的远程分支所包含的新里程碑同步到本地,而不会将
 	远程版本库的其他分支中的里程碑获取到本地.这既方便了里程碑的取得.又防止本地
 	里程碑因同步远程版本库而泛滥.
-	(3):如果本地已有同名的里程碑,默认不会从上游同步里程碑,即时两者里程碑的指向是不同的.
+	(3):如果本地已有同名的里程碑,默认不会从上游同步里程碑,即使两者里程碑的指向是不同的.
 	理解这一点非常重要,这也就要求里程碑一旦共享.就不要在修改.
 
 @@删除远程版本库中的里程碑.

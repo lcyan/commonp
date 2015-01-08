@@ -253,3 +253,327 @@
 	$ git commit -m 'Refactor: user getopt_long for arguments parsing.'
 	>>[user1/getopt 80a7591] Refactor: user getopt_long for arguments parsing.
  	>>2 files changed, 38 insertions(+), 6 deletions(-)
+ 	(6)提交完成之后,可以看到这时user1/getopt分支和master分支的指向不同了.
+ 	$ `get rev-parse user1/getopt master`
+ 	>>80a75917e7177b13d6a312aaf56b31b2b0644489
+	>>658eebd9a6583015434a8fdcd29b471e57acc62e
+	(7)编译运行hello-world
+	$ cd src
+	$ make clean
+	>> rm -f hello main.o version.h
+	$ make
+	>>version.h.in => version.h
+	>>cc    -c -o main.o main.c
+	>>cc -o hello main.o
+	$ ./hello
+	>>Hello world.
+	>>(version: v1.0-1-g80a7591)
+
+@@将`user1/getopt`分支合并到主线
+
+	既然开发者user1负责的功能开发完成了,那就合并到开发主线master上吧.这样测试团队(如果有的话)
+	就可以基于开发主线master进行软件集成和测试了.具体操作如下.
+	(1)为将分支合并到主线,首先user1将工作区切换到主线,即master分支.
+	$ git checkout master
+	>>Switched to branch 'master'
+	>>Your branch is up-to-date with 'origin/master'.
+	(2)然后执行`git merge`命令以合并`user1/getopt`分支.
+	$ git merge usr1/getopt
+	>>Updating 658eebd..80a7591
+	>>Fast-forward
+	>> src/Makefile |  3 ++-
+	>> src/main.c   | 41 ++++++++++++++++++++++++++++++++++++-----
+	>> 2 files changed, 38 insertions(+), 6 deletions(-)
+	(3)本次合并非常顺利,实际上合并后master分支和user1/getopt指向同一个提交.这是因为合并前
+	的master分支的提交就是`user1/getopt`分支的父提交,所有此次合并相当于将分支master重置到user1/getopt分支.
+	$ git rev-parse user1/getopt master
+	>>80a75917e7177b13d6a312aaf56b31b2b0644489
+	>>80a75917e7177b13d6a312aaf56b31b2b0644489
+	(4)查看状态信息可以看到本地分支和远程分支的跟踪关系.
+	$ git status
+	>>On branch master
+	>>Your branch is ahead of 'origin/master' by 1 commit.
+	>>  (use "git push" to publish your local commits)
+	>>nothing to commit, working directory clean
+	(5)上面的状态输出中显示本地master分支比远程共享版本库的master分支领先,可以运行`git cherry`
+	命名查看那些提交领先(未被推送到上游跟踪分支中.)
+	$ git cherry
+	>>+ 80a75917e7177b13d6a312aaf56b31b2b0644489
+	(6)执行推送操作,完成本地分支向远程分支的同步.
+	$ git push
+	Counting objects: 5, done.
+	>>Compressing objects: 100% (4/4), done.
+	>>Writing objects: 100% (5/5), 601 bytes | 0 bytes/s, done.
+	>>Total 5 (delta 3), reused 1 (delta 1)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>>   658eebd..80a7591  master -> master
+	(7)删除`user1/getopt`分支.
+	既然特性分支`user1/getopt`已经合并到主线上,那么该分支已经完成了历史使命.可以放心地将其删除.
+	$ git branch -d user1/getopt
+	>>Deleted branch user1/getopt (was 80a7591).
+
+	开发者user2对多种语种的支持功能有些犯愁,需要多花些时间,那么就先不等他了.
+
+
+@@基于发布分支的开发.
+	用户在使用1.0版的hello-world过程中发现了两个错误.报告给项目组.
+	(1):帮助信息中出现了文字错误.本应该写为`--help`,却写成了`-help`
+	(2):当执行`hello-world`的程序,提供带空格的用户名时,问候语中显示的是不完整的用户名.
+	为了能够及时修正1.0版本中存在的这两个bug,将这两个bug的修正工作分别交个两个开发者user1/user2完成.
+	>开发者user1负责修改文件错误bug.
+	>开发这user2负责修改显示用户名不完整的bug.
+	现在的版本库中master分支相比1.0发布时添加了新功能代码,即开发者user1推送的用getopt进行命令解析的相关代码.
+	如果基于master分支对用户报告的两个bug进行修改.就会引入尚未经过测试,可能不稳定的新功能代码.
+
+@@创建发布分支
+	@要想解决1.0版本中发现的bug,就需要基于1.0发行版的代码创建发布分支.
+	(1)软件hello-world的1.0发布版在版本库中有一个里程碑对应.
+	$ cd path/to/user1/workspace/hello-world
+	$ git tag -n1 -l v*
+	>>v1.0            Release 1.0
+	(2)基于里程碑v1.0创建发布分支hello-1.x.
+	Note:使用了`git checkout`命令创建分支,最后一个参数v1.0是新分支hello-1.x创建的基准点,如果
+	没有里程碑使用提交ID也是一样.
+	$ git checkout -b hello-1.x v1.0
+	>>Switched to a new branch 'hello-1.x'
+	(3)用`git rev-parse`命令可以看到`hello-1.x`分支对应的提交ID和里程碑v1.0指向的提交一致.但是和master不一样.
+	提示:因为里程碑v1.0是一个包含提交说明的里程碑,因此为了显示其对应的提交ID,使用了特别的激发'v1.0^{}'.
+	$ git rev-parse hello-1.x v1.0^{} master
+	>>658eebd9a6583015434a8fdcd29b471e57acc62e
+	>>658eebd9a6583015434a8fdcd29b471e57acc62e
+	>>80a75917e7177b13d6a312aaf56b31b2b0644489
+	(4)开发user1将分支hello-1.x推送到远程共享版本库,因为开发者user2修改bug也要用到该分支.
+	$ git push origin refs/heads/hello-1.x
+	>>Total 0 (delta 0), reused 0 (delta 0)
+	>>To file:///root/source/gitrepo/hello-world.git
+ 	>>* [new branch]      hello-1.x -> hello-1.x
+ 	(5)开发者user2从远程共享版本库获取新的分支.
+ 	开发者user2执行`git fetch`命令,将远程共享版本库的新分支hello-1.x复制到本地引用origin/hello-1.x上.
+ 	$ cd /path/to/user2/workspace/hello-world/
+ 	$ git fetch
+ 	>>remote: Counting objects: 4, done.
+	>>remote: Compressing objects: 100% (3/3), done.
+	>>remote: Total 4 (delta 3), reused 1 (delta 1)
+	>>Unpacking objects: 100% (4/4), done.
+	>>From file:///root/source/gitrepo/hello-world
+	>> * [new branch]      hello-1.x  -> origin/hello-1.x
+	>>   658eebd..80a7591  master     -> origin/master
+	(6)开发者user2切换到hello-1.x分支上.
+	本地引用`origin/hello-1.x`称为远程分支.该远程分支不能直接检出,而是需要基于该远程分支创建本地分支,
+	以后会介绍一个更为简单的基于远程分支建立本地分支的方法,本例先用标准的方法建立分支.
+	$ git checkout -b hello-1.x origin/hello-1.x
+	>>Branch hello-1.x set up to track remote branch hello-1.x from origin.
+	>>Switched to a new branch 'hello-1.x'
+
+@@开发者user1工作在发布分支.
+	开发者user1修改帮助信息中的文字错误.
+	(1)$ vim src/main.c //将`-help`字符串改为`--help`
+	(2)开发者user1的改动可以从下面的差异比较中看到.
+	$ git diff
+	>>diff --git a/src/main.c b/src/main.c
+	>>index 6ee936f..e76f05e 100644
+	>>--- a/src/main.c
+	>>+++ b/src/main.c
+	>>@@ -11,7 +11,7 @@ int usage(int code)
+	>>            "            say hello to the world.\n\n"
+	>>            "    hello <username>\n"
+	>>            "            say hi to the user.\n\n"
+	>>-           "    hello -h, -help\n"
+	>>+           "    hello -h, --help\n"
+	>>            "            this help screen.\n\n", _VERSION);
+	>>     return code;
+	>> }
+	(3)执行提交
+	$ git add -u
+	$ git commit -m 'Fix typo: -help to --help.'
+	>>[hello-1.x 68c6f91] Fix typo: -help to --help.
+ 	>>1 file changed, 1 insertion(+), 1 deletion(-)
+ 	(4)推送到远程共享版本库.
+ 	$ git push origin refs/heads/hello-1.x
+ 	>>Counting objects: 4, done.
+	>>Compressing objects: 100% (3/3), done.
+	>>Writing objects: 100% (4/4), 363 bytes | 0 bytes/s, done.
+	>>Total 4 (delta 3), reused 1 (delta 1)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>>   658eebd..68c6f91  hello-1.x -> hello-1.x
+
+@@开发者user2工作在发布分支
+	开发者user2针对问候时用户名显示不全的bug进行修改.
+	(1):进入开发者user2的工作区.并确保工作在hello-1.x分支中.
+	$ cd /path/to/user2/workspace/hello-world/
+	$ git checkout hello-1.x
+	(2):编辑文件`src/main.c`修改代码中的bug.
+	$ vim src/main.c
+	(3):实际上hello-world版本库中包含了我的一份修改,可以看看和您的更改是否一致.
+	下面的命令将我对此bug的修改保存为一个补丁文件.
+	$ git format-patch jx/v1.1..jx/v1.2
+	>>0001-Bugfix-allow-spaces-in-username.patch
+	(4):应用我对此bug的改动补丁.(注释:应用有git format-patch生成的补丁文件,最好使用git am命令,这里为了简单起见使用GNU patch命令)
+	$ patch -p1 < 0001-Bugfix-allow-spaces-in-username.patch
+	>>patching file src/main.c
+	(5):查看代码的改动
+	$ git diff
+	>>diff --git a/src/main.c b/src/main.c
+	>>index 6ee936f..f0f404b 100644
+	>>--- a/src/main.c
+	>>+++ b/src/main.c
+	>>@@ -19,13 +19,20 @@ int usage(int code)
+	>> int
+	>> main(int argc, char **argv)
+	>> {
+	>>+    char **p = NULL;
+	>>+
+	>>     if (argc == 1) {
+	>>         printf ("Hello world.\n");
+	>>     } else if ( strcmp(argv[1],"-h") == 0 ||
+	>>                 strcmp(argv[1],"--help") == 0 ) {
+	>>                 return usage(0);
+	>>     } else {
+	>>-        printf ("Hi, %s.\n", argv[1]);
+	>>+        p = &argv[1];
+	>>+        printf ("Hi,");
+	>>+        do {
+	>>+            printf (" %s", *p);
+	>>+        } while (*(++p));
+	>>+        printf (".\n");
+	>>     }
+	>>
+	>>     printf( "(version: %s)\n", _VERSION );
+	(6)本地测试一下改进后的软件,看看bug是否已经修正,如果运行解决能显示出完整的用户名,则bug修正.
+	$ cd src/
+	$ make
+	$ ./hello Jiang Xin
+	>>Hi, Jiang Xin.
+	>>(version: v1.0-dirty)
+	(7)提交代码
+	$ git add -u
+	$ git commit -m 'Bugfix: allow spaces in username.'
+	>>[hello-1.x c316476] Bugfix: allow spaces in username.
+ 	>>1 file changed, 8 insertions(+), 1 deletion(-)
+
+@@开发者user2合并推送
+	开发这user2在本地版本库完成提交后,不要忘记向远程共享版本库进行推送.当在推送分支hello-1.x是开发者
+	user2没有开发这user1那么幸运,因为此时的远程共享版本库的hello-1.x分支已经为user1推送过一次,因此
+	开发者user2在推送过程中会遇到非快进式推送问题.
+	$ git push
+	>>To file:///root/source/gitrepo/hello-world.git
+	>> ! [rejected]        hello-1.x -> hello-1.x (fetch first)
+	>>error: failed to push some refs to 'file:///root/source/gitrepo/hello-world.git'
+	>>hint: Updates were rejected because the remote contains work that you do
+	>>hint: not have locally. This is usually caused by another repository pushing
+	>>hint: to the same ref. You may want to first integrate the remote changes
+	>>hint: (e.g., 'git pull ...') before pushing again.
+	>>hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+	开发者user2需要执行一个拉回操作,将远程共享服务器的改动获取到本地并和本地提交进行合并.
+	$ git pull
+	>>remote: Counting objects: 4, done.
+	>>remote: Compressing objects: 100% (3/3), done.
+	>>remote: Total 4 (delta 3), reused 1 (delta 1)
+	>>Unpacking objects: 100% (4/4), done.
+	>>From file:///root/source/gitrepo/hello-world
+	>>   658eebd..68c6f91  hello-1.x  -> origin/hello-1.x
+	>>Auto-merging src/main.c
+	>>Merge made by the 'recursive' strategy.
+	>> src/main.c | 2 +-
+	>> 1 file changed, 1 insertion(+), 1 deletion(-)
+	$ git log --graph --oneline
+	>>*   0aada83 Merge branch 'hello-1.x' of file:///root/source/gitrepo/hello-world into hello-1.x
+	>>|\
+	>>| * 68c6f91 Fix typo: -help to --help.
+	>>* | c316476 Bugfix: allow spaces in username.
+	>>|/
+	>>* 658eebd blank commit for GnuPG-signed tag test.
+	>>* 5c2b1f0 blank commit for annotated tag test.
+	>>* aebc86c blank commit.
+	>>*   d901dd8 Merge pull request #1 from gotgithub/patch-1
+	>>|\
+	>>| * 96fc4d4 Bugfix: build target when version.h changed.
+	>>|/
+	>>* 3e6070e Show version.
+	>>* 75346b3 Hello world initialized.
+	@@现在开发者user2可以将合并后的本地版本库中的提交推送给远程共享库版本了.
+	$ git push
+	>>Counting objects: 8, done.
+	>>Compressing objects: 100% (7/7), done.
+	>>Writing objects: 100% (8/8), 893 bytes | 0 bytes/s, done.
+	>>Total 8 (delta 6), reused 1 (delta 1)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>>   68c6f91..0aada83  hello-1.x -> hello-1.x
+
+@@发布分支的提交合并到主线
+	当开发者user1和user2都相继在hello-1.x分支中将相应的bug修改完成后,就可以从hello-1.x分支中编译
+	新的软件产品给客户使用了,解析来别忘了在主线master分支中也做粗同样的更改,因为在hell-1.x分支中
+	修改的bug同样也存在于主线master分支中.
+	<1>.拣选操作
+		使用git提供的拣选命令,就可以直接将发布分支上进行的bug修正合并到主线上,下面就以开发者user2
+		的身份进行操作.
+		(1)进入开发者user2的工作区并切换到master分支
+		$ cd /path/to/user2/workspace/hello-world
+		$ git checkout master
+		>>Switched to branch 'master'
+		>>Your branch is behind 'origin/master' by 1 commit, and can be fast-forwarded.
+		>>  (use "git pull" to update your local branch)
+		(2)从远程共享版本库同步master分支
+		同步后本地master分支包含了开发这user1提交的命令行解析重构的代码.
+		$ git pull
+		>>Updating 658eebd..80a7591
+		>>Fast-forward
+		>> src/Makefile |  3 ++-
+		>> src/main.c   | 41 ++++++++++++++++++++++++++++++++++++-----
+		>> 2 files changed, 38 insertions(+), 6 deletions(-)
+		(3)查看分支hello-1.x的日志,确认要拣选的提交ID
+		从下面的的日志可以看出分支hello-1.x的最新提交是一个合并提交,而要拣选的提交分别是其第一个
+		父提交和第二个父提交.可以分别用`hello-1.x^1`和`hello-1.x^2`表示.
+		>>*   0aada8364572e656b116bc20ef71c2f0383d4f55 (origin/hello-1.x, hello-1.x) Merge branch 'hello-1.x' of file:///root/source/gitrepo/hello-world into hello-1.x
+		>>|\
+		>>| * 68c6f91f550386b2c014590e06debc8677d3f51d Fix typo: -help to --help.
+		>>* | c31647694152610ead5fd68cb11e0f1362d4fb85 Bugfix: allow spaces in username.
+		>>|/
+		>>* 658eebd9a6583015434a8fdcd29b471e57acc62e (tag: v1.0, tag: mytag3, user2/i18n) blank commit for GnuPG-signed tag test.
+		(4)执行拣选操作,先将开发者user2提交的修正代码拣选到当前分支(即主线).
+		拣选操作遇到了冲突.
+		$ git cherry-pick hello-1.x^1
+		>>error: could not apply c316476... Bugfix: allow spaces in username.
+		>>hint: after resolving the conflicts, mark the corrected paths
+		>>hint: with 'git add <paths>' or 'git rm <paths>'
+		>>hint: and commit the result with 'git commit'
+		(5)拣选操作发生了冲突,通过查看状态可以看出是在文件src/main.c上发生的冲突.
+		$ git status
+		>>On branch master
+		>>Your branch is up-to-date with 'origin/master'.
+		>>You are currently cherry-picking commit c316476.
+		>>  (fix conflicts and run "git cherry-pick --continue")
+		>>  (use "git cherry-pick --abort" to cancel the cherry-pick operation)
+
+		>>Unmerged paths:
+		>>  (use "git add <file>..." to mark resolution)
+
+		>>	both modified:   src/main.c
+
+		>>no changes added to commit (use "git add" and/or "git commit -a")
+	<2>.冲突发生的原因
+		@@为什么发生了冲突呢,这是因为拣选hello-1.x分支上的一个提交到master分支时,因为两个甚至多个提交在重叠
+		的位置更改代码所致,通过下面的命令可以看到到底是那些提交引起的冲突.
+		$ git log master...hello-1.x^1
+		>>commit c31647694152610ead5fd68cb11e0f1362d4fb85
+		>>Author: user2 <user2@molloc.com>
+		>>Date:   Thu Jan 8 22:34:26 2015 +0800
+
+		>>    Bugfix: allow spaces in username.
+
+		>>    Signed-off-by: user2 <user2@molloc.com>
+
+		>>commit 80a75917e7177b13d6a312aaf56b31b2b0644489
+		>>Author: user1 <user1@molloc.com>
+		>>Date:   Wed Jan 7 23:51:36 2015 +0800
+
+		>>    Refactor: user getopt_long for arguments parsing.
+
+		>>    Signed-off-by: user1 <user1@molloc.com>
+
+		可以看出引发冲突的提交一个是当前工作分支master上的最新提交,即开发者user1的重构命令行参数解析的提交,
+		而另外一个引发冲突的是要拣选的提交,即开发者user2针对用户名显示不全所做的错误修正的提交.一定是因为这
+		两个提交的更改发生了重叠导致了冲突的发生.
+
+		@@冲突解决
+		$ vim src/main.c

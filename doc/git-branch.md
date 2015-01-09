@@ -577,3 +577,215 @@
 
 		@@冲突解决
 		$ vim src/main.c
+		将手动变基完成的文件src/main.c添加到暂存区才真正的完成了冲突解决.
+		$ git add src/main.c
+		因为是拣选操作,提交最好重用所拣选提交的提交说明和作者信息,而且也省下了自己写提交说明的麻烦.使用下面
+		的命令完成提交操作.
+		$ git commit -C head-1.x^1
+		>>[master 754e97e] Bugfix: allow spaces in username.
+		>> Date: Thu Jan 8 22:34:26 2015 +0800
+		>> 1 file changed, 8 insertions(+), 4 deletions(-)
+
+	@@完成全部拣选操作
+	接下来再将开发者user1在分支hello-1.x中的提交也拣选到当前分支,所拣选的提交非常简单,不过是修改了提交说明中的
+	文字错误而已.拣选操作也不会引发异常,直接完成.
+	$ git cherry-pick hello-1.x^2
+	>>[master fecf7ae] Fix typo: -help to --help.
+	>> Author: user1 <user1@molloc.com>
+	>> Date: Thu Jan 8 22:05:21 2015 +0800
+	>> 1 file changed, 1 insertion(+), 1 deletion(-)
+	现在通过日志可以看到master分支已经完成了对已知bug的修复.
+	$ git log -3 --graph --oneline
+	>>* fecf7ae Fix typo: -help to --help.
+	>>* 754e97e Bugfix: allow spaces in username.
+	>>* 80a7591 Refactor: user getopt_long for arguments parsing.
+	查看状态可以看到当前的工作分支相对于远程服务器有两个新提交.
+	$ git status
+	>>Your branch is ahead of 'origin/master' by 2 commits.
+	>>  (use "git push" to publish your local commits)
+	>>nothing to commit, working directory clean
+	执行推送命令将本地master分支同步到远程共享版本库.
+	$ git push
+	>>Counting objects: 8, done.
+	>>Compressing objects: 100% (8/8), done.
+	>>Writing objects: 100% (8/8), 817 bytes | 0 bytes/s, done.
+	>>Total 8 (delta 6), reused 0 (delta 0)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>>   80a7591..fecf7ae  master -> master
+
+@@分支变基
+
+@@完成user2/i18n特性分支的开发.
+	开发者user2针对多语种开发的工作任务,在最后接着'实现'这个稍微负责的 功能来学习
+	一下git分支的变基操作.
+	(1)进入user2的工作区,并切换到user2/i18n分支.
+	$ cd /path/to/user2/workspace/hello-world
+	$ git checkout user2/i18n
+	>>Switched to branch 'user2/i18n'
+	(2)使用gettext为软件添加多语音支持,您可以尝试实现该功能,不过在hello-world中已经
+	保存了一份改好的代码(见里程碑jx/v1.0-i18n)可以直接拿过来使用.
+	(3)里程碑jx/v1.0-i18n最后的两个提交实现了多语言支持.
+	$ git log --oneline -2 --stat jx/v1.0-i18n
+	(4)可以通过拣选命令将这两个提交拣选到user2/i18n分支中,相当于分支user1/i18n中实现
+	了多语言支持的开发.
+	$ git cherry-pick jx/v1.0-i18n~1
+	>>[user2/i18n fdd1ace] Add I18N support.
+	>> Author: Jiang Xin <jiangxin@ossxp.com>
+	>> Date: Fri Dec 31 12:08:43 2010 +0800
+	>> 4 files changed, 125 insertions(+), 6 deletions(-)
+	>> create mode 100644 src/locale/helloworld.pot
+	>> create mode 100644 src/locale/zh_CN/LC_MESSAGES/helloworld.po
+	$ git cherry-pick jx/v1.0-i18n
+	>>[user2/i18n 4f491ef] Translate for Chinese.
+	>> Author: Jiang Xin <jiangxin@ossxp.com>
+	>> Date: Fri Dec 31 12:12:42 2010 +0800
+	>> 1 file changed, 23 insertions(+), 7 deletions(-)
+	(5)看看当前分支拣选后的日志
+	$ git log --oneline -2
+	>>4f491efd433bb16256969d63bd4805d743b605f7 (HEAD, user2/i18n) Translate for Chinese.
+	>>fdd1ace7eb174dea7e672bdf69889d45483f8a00 Add I18N support.
+	(6)为了测试刚刚`开发`完成的多语言支持功能,先对源码执行编译.
+	$ cd src
+	$ make
+	(7)查看帮助信息,会发现帮助信息已经本地化.
+	注意:帮助信息中仍然有文字错误,--help误写-help
+	$ ./hello --help
+	(8)不带用户名运行hello,也会输出中文.
+	$ ./hello
+	>>世界你好。
+	>>(version: v1.0-2-g4f491ef)
+	(9)带用户名运行hello,会向用户问好.
+	注意:程序仍然存在只显示部分用户名的问题.
+	$ ./hello Jiang Xin
+	>>您好, Jiang.
+	>>(version: v1.0-2-g4f491ef)
+	(10)推送分支user2/i18n到远程共享服务器.
+	推送该特性分支的目的并非是与他人在此分支上协同工作,主要是为了进行数据备份.
+	$ git push origin refs/heads/user2/i18n
+	>>对象计数中: 17, 完成.
+	>>压缩对象中: 100% (10/10), 完成.
+	>>写入对象中: 100% (17/17), 1.73 KiB | 0 bytes/s, 完成.
+	>>Total 17 (delta 8), reused 9 (delta 3)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>> * [new branch]      user2/i18n -> user2/i18n
+
+@@分支user2/i18n的变基
+	在测试刚刚完成的具有多语种支持功能的hello-world时,之前改正的两个Bug又重现了.这
+	并不奇怪,因为分支user2/i18n基于master分支创建的时候,这两个bug还没有发现呢.更不要
+	说是改正了.
+	在最早刚刚创建user2/i18n分支时,版本库的结构非常简单.
+	@@import doc/img/git-branch-line-678.jpg
+
+	但是当前master分支不但包含了对两个bug的修正,还包含了开发者user1调用getopt对命令
+	行参数解析进行的代码重构.下图显示的是当前版本库master分支和user2/i18n分支的关系图.
+	@@import doc/img/git-branch-line-681.jpg
+
+	开发者user2要将分支user2/i18n中的提交合并到主线master中,可以采用上一节介绍的分支
+	合并操作.如果执行分支合并操作,版本库的状态将会如下图所示.
+	@@import doc\img\git-branch-line-685.jpg
+
+	这样操作有利有弊,有利的一面是开发这在user2/i18n中的提交不会发生改变,这一点对于提交
+	已经被他人共享时很重要,再有因为user2/i18n分支是基于v1.0创建的.这样可以容易将多语言
+	支持功能添加到1.0版本的hello-world中.不过这些对于本项目来说都不重要.至于不利的一面
+	就是这样的合并操作会产生三个提交(包含一个合并提交)对于要对提交进行审核的项目团队来
+	说增加了代码审核的负担.因此很多项目在特性分支合并到开发主线的时候,都不推荐使用合并
+	操作,而是使用变基操作.如果执行变基操作,版本库相关分支的关系图如下所示.
+	@@import doc\img\git-branch-line-693.jpg
+
+	很显然,采用变基操作的分支关系图要比采用合并操作的简单多了,看起来更像是集中式版本控
+	制系统特有的顺序提交,因为减少了一个提交,也会减轻代码审核的负担.
+
+	@@下面是user2就通过变基操作将特性分支user2/i18n合并到主线.
+	(1)确保开发者user2的工作分区位于分支user2/i18n上.
+	$ cd /path/to/user2/workspace/hello-world/
+	$ git checkout user2/i18n
+	(2)执行变基操作
+	$ git rebase master
+	>>First, rewinding head to replay your work on top of it...
+	>>Applying: Add I18N support.
+	>>Using index info to reconstruct a base tree...
+	>>M	src/Makefile
+	>>M	src/main.c
+	>>Falling back to patching base and 3-way merge...
+	>>Auto-merging src/main.c
+	>>CONFLICT (content): Merge conflict in src/main.c
+	>>Auto-merging src/Makefile
+	>>Failed to merge in the changes.
+	>>Patch failed at 0001 Add I18N support.
+	>>The copy of the patch that failed is found in:
+	>>   /root/source/usersgitrepo/user2/workspace/hello-world/.git/rebase-apply/patch
+
+	>>When you have resolved this problem, run "git rebase --continue".
+	>>If you prefer to skip this patch, run "git rebase --skip" instead.
+	>>To check out the original branch and stop rebasing, run "git rebase --abort".
+	变基遇到冲突,看来这回的麻烦可不小,冲突是在合并user2/i18n分支中的提交'Add I18N support'
+	时遇到的.首先回顾一下变基原理.对于本例,在进行变基操作的时会先切换到user2/i18n分支,
+	并强制重置到master分支所指向的提交,然后再将原user2/i18n分支的提交一一拣选到新的
+	user2/i18n分支上.
+	@@运行下面命令可以查看可能导致冲突的提交列表.
+	$ git rev-list --pretty=onelie user2/i18n^...master //i18n^和master共同的提交除外.
+	>>fdd1ace7eb174dea7e672bdf69889d45483f8a00 Add I18N support.
+	>>fecf7ae869d37146de4c9520bae4bb410a5dfbc0 Fix typo: -help to --help.
+	>>754e97ea7c0834a474bdf09a14618a9dd3010f8c Bugfix: allow spaces in username.
+	>>80a75917e7177b13d6a312aaf56b31b2b0644489 Refactor: user getopt_long for arguments parsing.
+	刚刚发生的冲突是在拣选提交'Add I18N support.'时出现的,所以在冲突文件中标识为他人版本的是
+	user2添加多语种支持功能的提交.而冲突文件中标识为直接版本的是修正两个bug的提交及开发这user1
+	提交的重构命令行参数解析的提交.题目的两个表格(18-2,18-2)是文件src/main.c发生冲突的两个主要
+	区域,表格的左侧一列是冲突文件中的内容.右侧一列则是 冲突解决后的内容.
+	@将完成冲突解决的文件src/main.c加入暂存区.
+	$ git add -u
+	$ git status
+	>>rebase in progress; onto fecf7ae
+	>>You are currently rebasing branch 'user2/i18n' on 'fecf7ae'.
+	>>  (all conflicts fixed: run "git rebase --continue")
+
+	>>Changes to be committed:
+	>>  (use "git reset HEAD <file>..." to unstage)
+
+	>>	modified:   src/Makefile
+	>>	new file:   src/locale/helloworld.pot
+	>>	new file:   src/locale/zh_CN/LC_MESSAGES/helloworld.po
+	>>	modified:   src/main.c
+	现在不要执行提交,而是继续执行变基操作,变基操作会自动完成对冲突解决的提交.并对分支中的其他提交
+	继续执行变基,直到全部完成.
+	$ git rebase --continue
+	>>Applying: Add I18N support.
+	>>Applying: Translate for Chinese.
+	下图显示了版本库执行变基完成后的状态.
+	@@import doc\img\git-branch-line-755.jpg
+
+	@@现在需要将user2/i18n分支的提交合并到主线master中,实际上不需要在master分支上在执行凡是的合并
+	操作,而是可以直接用推送操作,用本地user2/i18n分支直接更新远程版本库的master分支.
+	$ git push origin user2/i18n:master //含义是将本地引用user2/i18n引用的内容(提交ID)更新到远程共享版本库的master引用内容(提交ID)
+	>>Counting objects: 11, done.
+	>>Compressing objects: 100% (8/8), done.
+	>>Writing objects: 100% (11/11), 1.13 KiB | 0 bytes/s, done.
+	>>Total 11 (delta 6), reused 4 (delta 1)
+	>>To file:///root/source/gitrepo/hello-world.git
+	>>   fecf7ae..070947f  user2/i18n -> master
+	@@执行拉回操作,可以发现远程共享版本库的master分支的确被更新了.通过拉回操作本地的master分支也随之更新了.(下面是操作)
+	(1)切换到master分支,会从提示信息中看到本地master分支落后远程共享版本库master分支两个提交.
+	$ git checkout master
+	>>Switched to branch 'master'
+	>>Your branch is behind 'origin/master' by 2 commits, and can be fast-forwarded.
+	>>  (use "git pull" to update your local branch)
+	(2)执行拉回操作,将本地master分支同步到和远程共享版本库相同的状态.
+	$ git pull
+	>>Updating fecf7ae..070947f
+	>>Fast-forward
+	>> src/Makefile                               | 21 +++++++++++++++++++--
+	>> src/locale/helloworld.pot                  | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+	>> src/locale/zh_CN/LC_MESSAGES/helloworld.po | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	>> src/main.c                                 | 18 +++++++++++++-----
+	>> 4 files changed, 140 insertions(+), 7 deletions(-)
+	>> create mode 100644 src/locale/helloworld.pot
+	>> create mode 100644 src/locale/zh_CN/LC_MESSAGES/helloworld.po
+	特性分支user2/i18n也完成了使命,可以删除了,因为之前user2/i18n已经推送到远程共享版本库.如果相要
+	删除分支不要忘了也将远程分支同时删除.
+	(1)删除本地分支user2/i18n
+	$ git branch -d user2/i18n
+	>>Deleted branch user2/i18n (was 070947f).
+	(2)删除远程远程共享版本库的user2/i18n分支.
+	$ git push origin :user2/i18n
+	>>To file:///root/source/gitrepo/hello-world.git
+    >>- [deleted]         user2/i18n

@@ -173,3 +173,161 @@
 	>> Applying: Translate for Chinese.
 	(3)补丁应用成功,查看提交日志.
 	$ git log -3 --pretty=fuller
+	>>commit d7432f3a649d86100fb7afbe23b2deb4bf5b3202
+	>>Author:     Jiang Xin <jiangxin@ossxp.com>
+	>>AuthorDate: Fri Dec 31 12:12:42 2010 +0800
+	>>Commit:     user1 <user1@molloc.com>
+	>>CommitDate: Sun Jan 11 11:06:54 2015 +0800
+	>>
+	>>Translate for Chinese.
+	>>
+	>>Signed-off-by: Jiang Xin <jiangxin@ossxp.com>
+	>>
+	>>commit 57b0e9066b31e27efb9a8ccc85eaf144a2d7cbfa
+	>>Author:     Jiang Xin <jiangxin@ossxp.com>
+	>>AuthorDate: Fri Dec 31 12:08:43 2010 +0800
+	>>Commit:     user1 <user1@molloc.com>
+	>>CommitDate: Sun Jan 11 11:06:54 2015 +0800
+	>>
+	>>Add I18N support.
+	>>
+	>>Signed-off-by: Jiang Xin <jiangxin@ossxp.com>
+	>>
+	>>commit 95fb787e5aab44d43ab4aca4422ccf2d167c1809
+	>>Author:     user1 <user1@molloc.com>
+	>>AuthorDate: Thu Jan 8 22:05:21 2015 +0800
+	>>Commit:     user1 <user1@molloc.com>
+	>>CommitDate: Sun Jan 11 11:06:54 2015 +0800
+	>>
+	>>Fix typo: -help to --help.
+	>>
+	>>Signed-off-by: user1 <user1@molloc.com>
+	#从提交信息中可以看出:
+	(1)提交的时间信息使用了邮件发送的时间.
+	(2)作者(Author)的信息被保留,和补丁文件中的一致.
+	(3)提交者(Commit)全部设置为user1,因为提交是在user1的工作区完成的.
+	(4)提交说明中的签名信息被保留,实际上`git am`命令也可以提供-s参数,
+	   在提交上面中附加执行命令的用户签名.
+
+	@对于不习惯在控制台用mail命令接收邮件的用户,可以通过邮件附件,U盘
+	或其他方式获取`git format-patch`生成的补丁文件.将补丁文件保存在
+	本地,通过管道符调用`git am`命令应用补丁.
+	$ ls *.patch
+	$ cat *.patch | git am
+	>> Applying: Fix typo: -help to --help.
+	>> Applying: Add I18N support.
+	>> Applying: Translate for Chinese.
+
+@@Git还提供了一个命令`git apply`可以应用一般格式的补丁文件,但是不能执行提交,也不能保持
+  补丁中的作者信息,实际上`git apply`命令和GNU patch命令类似.
+
+@@StGit和Quilt
+	@一个复制功能的开发一定是由多个提交来完成的.对于在以接收和应用补丁文件为开发模式的
+	 项目中,复杂的功能需要通过多个补丁文件来完成.补丁文件因为要经过审核才能被接受.因此
+	 针对一个功能的多个补丁文件一定要保证各个都是精品:补丁1用来完成一个功能点,补丁2用来
+	 完成第二个功能点.等等,一定不能出现这样的情况:补丁3用于修正补丁1的错误,补丁10改正
+	 补丁7中的文字错误,等等,这样就带来补丁管理的难题.
+	 实际上基于特性分支开发又何尝不是如此?在将特性分支归并到开发主线上,要接受团队的评审.
+	 特性分支的开发者一定想将特性分支上的提交进行重整,把一些提交合并或拆分.使用变基命令
+	 可以实现提交的重整.但是操作起来比较困难.有什么好办法呢?
+
+@StGit
+	StGit是Stacked Git的简称,StGit就是解决上面提到的两个难题的答案.实际上StGit在设计
+	上参考了一个著名的补丁管理工具Quilt,并且可以输出Quilt兼容的补丁列表.
+
+	StGit是一个python项目,安装起来还是很方便.
+	$ yum install stgit stgit-contrib
+	(1)首先检出hello-world版本库,进行stgit的实践.
+	$ cd /path/to/my/workspace/
+	$ git clone file:///path/to/repos/hello-world.git stgit-demo
+	$ cd stgit-demo
+	(2)在当前工作目录初始化stgit
+	$ stg init
+	(3)现在补丁列表为空
+	$ stg series
+	(4)将最新的三个提交转换为StGit补丁.
+	$ stg uncommit -n 3
+	>>Uncommitting 3 patches ... done
+	(5)现在补丁列表有三个文件了.
+	第一列是补丁的状态符号,加号(+)代表该补丁已经应用在版本库中,大于号(>)用于标识当前补丁.
+	$ stg series
+	>>+ fix-typo-help-to-help
+	>>+ add-i18n-support
+	>>> translate-for-chinese
+	(6)现在查看master分支的日志,发现和之前没有两样.
+	$ git log -3 --oneline
+	>>070947f Translate for Chinese.
+	>>f73345b Add I18N support.
+	>>fecf7ae Fix typo: -help to --help.
+	(7)执行StGit补丁出栈命令,会将补丁撤出引用,使用-a参数会将所有补丁撤出应用.
+	$ stg pop
+	>>Checking for changes in the working directory ... done
+	>>Popping patch "translate-for-chinese" ... done
+	>>Now at patch "add-i18n-support"
+	$ stg pop -a
+	>>Checking for changes in the working directory ... done
+	>>Popping patches "add-i18n-support" - "fix-typo-help-to-help" ... done
+	>>No patches applied
+	(8)在来看看版本的日志,发发现最新的三个提交都不见了.
+	$ git log -3 --oneline
+	>>754e97e Bugfix: allow spaces in username.
+	>>80a7591 Refactor: user getopt_long for arguments parsing.
+	>>658eebd blank commit for GnuPG-signed tag test.
+	(9)查看补丁列表状态,会看到每个补丁前都用减号(-)标识
+	$ stg series
+	>>- fix-typo-help-to-help
+	>>- add-i18n-support
+	>>- translate-for-chinese
+	(10)执行补丁入栈,即应用补丁,使用命令`stg push`或`stg goto`注意`stg push`命令和`git push`
+		风马牛不相及.
+	$ stg push
+	>>Checking for changes in the working directory ... done
+	>>Fast-forwarded patch "fix-typo-help-to-help"
+	>>Now at patch "fix-typo-help-to-help"
+	$ stg goto add-i18n-support
+	>>Checking for changes in the working directory ... done
+	>>Fast-forwarded patch "add-i18n-support"
+	>>Now at patch "add-i18n-support"
+	(11)现在处于应用add-i18n-support补丁的状态,这个补丁有些问题,本地话语音模板有错误,我们来
+		修改一下.
+	$ cd src/
+	$ rm locale/helloword.pot
+	$ make po
+	(12)现在查看工作区的状态,发现工作区有改动.
+	$ git status -s
+	>> M locale/helloworld.pot
+ 	>> M locale/zh_CN/LC_MESSAGES/helloworld.po
+ 	(13)不要提交,而是执行`stg refresh`命令更新补丁
+ 	$ stg refresh
+ 	>>Checking for changes in the working directory ... done
+	>>Refreshing patch "add-i18n-support" ... done
+	(14)这时在查看工作区,发现本地修改不见了.
+	$ git status -s
+	(15)执行`stg show`会看到当前的补丁add-i18n-support已经更新.
+	$ stg show
+	(16)将最后一个补丁应用到版本库,遇到冲突,这是因为最后一个补丁是对中文本地化文件的翻译,
+		因为翻译前的模板文件被更改了所有造成冲突.
+	$ stg push
+	>>Pushing patch "translate-for-chinese" ... 
+	>>  Error: Three-way merge tool failed for file "src/locale/zh_CN/LC_MESSAGES/helloworld.po"
+	>>  Error: The merge failed during "push".
+	>>         Use "refresh" after fixing the conflicts or revert the operation with "push --undo".
+	>>  stg push: GIT index merging failed (possible conflicts)
+	(17)这个冲突很好解决,直接编辑冲突文件helloworld.po.
+	(18)执行git add命令完成冲突解决.
+	$ git add locale/zh_CN/LC_MESSAGES/helloworld.po
+	(19)不要提交,而是使用`stg refresh`命令更新补丁,同时更新提交.
+	$ stg refresh
+	>> Now at patch 'translate-for-chinese'
+	(20)查看状态
+	$ git status -s
+	(21)导出补丁文件
+	$ stg export -d patches
+	(22)看看导出补丁的目标目录
+	$ ls pathces
+	>>add-i18n-support fix-typo-help-to-help series translate-for-chinese
+	(23)其中文件series是补丁文件的礼包.列在最前面的补丁先被应用.
+	#通过上面的演示可以看出stgit可以非常方便地对提交进行整理,整理提交是无须使用复杂的变基命令,而是采用
+	#提交stgit化,修改文件,执行`stg refresh`的工作流程即可更新补丁和提交.stgit还可以将补丁导出为补丁文件
+	#虽然导出的补丁文件没有像`git format-patch`那样加上代表顺序的数字前缀,但是用文件series标注了补丁文件
+	#的先后顺序.实际上执行`stg export`时添加`-n`参数为补丁文件添加数字前缀.

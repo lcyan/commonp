@@ -8,7 +8,7 @@
 @@-------------------------------git remote----------------------------------------------
 
 @19 section
-上一章介绍Git分支的时候,每一个版本库最多纸盒一个上游版本库(远程共享版本库)进行交互,实际上git允许
+上一章介绍Git分支的时候,每一个版本库最多只和一个上游版本库(远程共享版本库)进行交互,实际上git允许
 一个版本库和任意多的版本库进行交互,首先执行下面的命令,基于`hello-world.git`版本库在创建几个新的版本库.
 
 $ cd /path/to/repos
@@ -139,7 +139,7 @@ HEAD处于分离头指针状态,实际上除了以`refs/head`为前缀的引用�
 	>>HEAD is now at 658eebd blank commit for GnuPG-signed tag test.
 	(2)然后查看状态,显示当前分支相比跟踪分支落后了三个版本.
 	#之所以落后三个版本而非两个版本库是因为hello-1.x的最新提交是一个合并提交,包含两个父提交,
-	印象上面的重置命令会丢弃掉了三个提交.
+	因此上面的重置命令会丢弃掉了三个提交.
 	$ git status
 	>> On branch hello-1.x
 	>> Your branch is behind 'origin/hello-1.x' by 3 commits, and can be fast-forwarded.
@@ -152,7 +152,7 @@ HEAD处于分离头指针状态,实际上除了以`refs/head`为前缀的引用�
 	>>  src/main.c | 11 +++++++++--
 	>>  1 file changed, 9 insertions(+), 2 deletions(-)
 	#但是如果基于本地分支创建另外一个本地分支则没有分支跟踪的功能.下面就从本地的hello-1.x分支
-	#中穿件hello-jx分支.
+	#中创建hello-jx分支.
 	(1)从hello-1.x分支中创建新的本地分支hello-jx
 	$ git checkout -b hello-jx hello-1.x
 	>> Switched to a new branch 'hello-jx'
@@ -218,7 +218,7 @@ HEAD处于分离头指针状态,实际上除了以`refs/head`为前缀的引用�
 	>> 19     url = file:///root/source/gitrepo/hello-user1.git/
 	>> 20     fetch = +refs/heads/*:refs/remotes/new-remote/*
 */
-	#执行`git remote`敏玲,可以更为方便地显示已经注册的远程版本库.
+	#执行`git remote`命令,可以更为方便地显示已经注册的远程版本库.
 	$ git remote -v
 	>> new-remote	file:///root/source/gitrepo/hello-user1.git/ (fetch)
 	>> new-remote	file:///root/source/gitrepo/hello-user1.git/ (push)
@@ -301,7 +301,7 @@ HEAD处于分离头指针状态,实际上除了以`refs/head`为前缀的引用�
 
 @@PUSH和PULL操作与远程版本库
 
-	@Git分支一章已经介绍锅对于新建的本地分支(没有建立和远程分支的跟踪),执行git push命令
+	@Git分支一章已经介绍过对于新建的本地分支(没有建立和远程分支的跟踪),执行git push命令
 	是不会被推送到远程版本库中的,这样的设置是非常安全的,避免了因为误操作将本地分支创建
 	到远程版本库中.当不带任何参数执行`git push`,实际执行的过程是:
 
@@ -323,7 +323,7 @@ HEAD处于分离头指针状态,实际上除了以`refs/head`为前缀的引用�
 	  分支和远程分支出现偏离的情况下,会采用变基操作,而不是默认的合并操作.
 	  #如果为本地版本库设置参数`branch.autosetuprebase`值为true,则在基于远程分支建立
 	  本地追踪分支时,会自动配置branch.<branchname>.rebase参数,在执行`git pull`命令时
-	  使用变基操作取到默认的合并操作.
+	  使用变基操作取代默认的合并操作.
 
 @@里程碑和远程版本库
 	@远程版本库中的里程碑同步到本地版本库,会使用同样的名称,而不会想分支那样移动到

@@ -78,7 +78,7 @@
 	上述的图示非常粗糙,因为如果安装这样的设计很难将特性分支导出为补丁文件,
 	例如特性分支B导出为补丁,实际上应该是M2和M3之间的差异.而绝不是a2和M3之间
 	的差异.Topgit为了能够实现将分支导出为补丁,又为每个特性的开发引入了一个
-	特殊的引用(refs/top-bases/*),用于追踪特性分支的'变基',称为特性分支的基准
+	特殊的引用(refs/top-bases/\*),用于追踪特性分支的'变基',称为特性分支的基准
 	分支.所有特性分支的基准分支也形成了复杂的分支关系图.
 	@import doc/img/git-topgit-line-83.jpg
 
@@ -93,3 +93,265 @@
 	 该文件通过`tg create`命令在创建特性分支时自动创建,或者通过`tg depend add`命令来添加新依赖.
 
 	#文件.topmsg记录了该分支的描述信息,该文件通过`tg create`命令在创建特性分支时创建,可以手动编辑.
+
+@@Linux下安装Topgit
+
+$ git clone git://repo.or.cz/topgit.git
+
+$ cd topgit
+
+$ make prefix=/usr/local
+
+$ make prefix=/usr/local install
+
+安装改进版的Topgit.需要预先安装Quilt补丁管理工具.
+$ yum install -y quilt
+
+$ git clone git://github.com/ossxp-com/topgit.git
+
+$ cd topgit
+
+$ QUILT_PATCHES=debian/patches quilt push -a
+
+>> Applying patch debian/patches/t/debian_locations.diff
+>> patching file Makefile
+>> patching file tg.sh
+>>
+>> Applying patch debian/patches/t/delete-remote-branch.diff
+>> patching file tg-delete.sh
+>>
+>> Applying patch debian/patches/t/export_quilt_all.diff
+>> patching file README
+>> patching file tg-export.sh
+>>
+>> Applying patch debian/patches/t/fast_tg_summary.diff
+>> patching file tg-summary.sh
+>>
+>> Applying patch debian/patches/t/git-merge-no-edit.diff
+>> patching file tg.sh
+>>
+>> Applying patch debian/patches/t/graphviz_layout.diff
+>> patching file tg-summary.sh
+>>
+>> Applying patch debian/patches/t/mac_os_x.diff
+>> patching file tg-info.sh
+>> patching file tg-patch.sh
+>> patching file tg.sh
+>> Hunk #1 succeeded at 434 with fuzz 1 (offset 2 lines).
+>>
+>> Applying patch debian/patches/t/prune-stale-remote-branch.diff
+>> patching file tg-remote.sh
+>>
+>> Applying patch debian/patches/t/tg_completion_bugfix.diff
+>> patching file contrib/tg-completion.bash
+>>
+>> Applying patch debian/patches/t/tg_graph_ascii_output.diff
+>> patching file .gitignore
+>> patching file Makefile
+>> patching file contrib/tg-completion.bash
+>> patching file share/graph.gvpr
+>> patching file tg-graph.sh
+>> patching file tg-summary.sh
+>> Hunk #3 succeeded at 80 (offset 11 lines).
+>> Hunk #4 succeeded at 141 (offset 11 lines).
+>>
+>> Applying patch debian/patches/t/tg_push_all.diff
+>> patching file tg-push.sh
+>>
+>> Now at patch debian/patches/t/tg_push_all.diff
+
+$ make prefix=/usr/local
+
+$ make prefix=/usr/local install
+
+@@注意如果克隆Topgit版本库后工作区文件的换行符是DOS格式换行符(CRLF),在安装过程
+  中会遇到麻烦.克隆改进的Topgit则不会出现类似问题,这是因为在工作区根目录下存在
+  一个`.gitattributes`文件,可以保证检出的工作区文件采用Unix格式的换行符(LF)
+
+  @在Cygwin下安装改进后的Topgit使用方法如下:
+  $ git clone git://github.com/ossxp-com/topgit.git
+  $ cd topgit
+  $ QUILT_PATCHES=debian/patches quilt push -a
+  $ make prefix=/usr/local
+  $ make prefix=/usr/local install
+
+@@Topgit的使用
+
+	@通过前面的原理部分,可以发现Topgit为管理特性分支引入的配置文件和基准分支都是和Git兼容的.
+
+	#在refs/top-bases/命名空间下的引用,用于记录特性分支的基准分支.
+	#在特性分支的工作区根目录下引入两个文件`.topdeps`和`.topmsg`,用于记录分支的依赖和说明.
+	#引入新的钩子脚本`hooks/pre-commit`用于在提交时检查分支依赖有没有发生循环等.
+
+	@Topgit的命令行的一般格式为:
+
+	$ tg [global_option] <subcmd> [command_options...] [arguments...]
+
+	Note:在子命令前的全局选项,目前可用的只有`-r <remote>`用于设定远程版本库,默认为origin.
+		 在子命令后可以跟子命令相关的参数.
+
+	<1>. tg help
+		@`tg help`命令显示帮助信息,在`tg help`后面提供子命令名称,可以获得该子命令详细的帮助信息.
+	<2>. tg create
+		@`tg create`命令用于创建新的特性分支.用法如下:
+		$ tg [...] create NAME [DEPS... | -r RNAME]
+		其中:
+		#NAME是新的特性分支的分支名,必须提供.一般约定俗成:NAME以`t/`前缀开头的分支表明此分支是一个Topgit特性分支.
+		#DEPS...是可选的一个或多个依赖分支名.如果不提供依赖分支名.则使用当前分支作为新的特性分支的依赖分支.
+		# -r RNAME选项,将远程分支作为依赖分支,不常用.
+		@`tg create`命令会创建新的特性分支`refs/heads/NAME`,以及特性分支的基准分支`refs/top-bases/NAME`,并且
+		 在项目的根目录下创建文件`.topdeps`和`.topmsg`还会提示用户编辑`.topmsg`文件,输入详细的特性分支的描述信息.
+		为了试验Topgit命令,找一个示例版本库或干脆创建一个版本库.在示例版本库的master分支下输入如下命令创建一个
+		名为`t/featurel`的特性分支:
+		$ tg create t/feature1
+		>>tg: Automatically marking dependency on master
+		>>tg: Creating t/feature1 base from master...
+		>>Switched to a new branch 't/feature1'
+		>>tg: Topic branch t/feature1 set up. Please fill .topmsg now and make initial commit.
+		>>tg: To abort: git rm -f .top* && git checkout master && tg delete t/feature1
+
+		@提示信息以`tg:`开头的是Topgit产生的说明.其中提示用户变基`.topmsg`文件,然后执行一次提交操作完成Topgit特性分支的创建.
+
+		@如果想撤销此次操作,删除项目根目录下`.top*`文件,切换到master分支,然后执行`tg delete t/feature1`命令删除`t/feature1`
+		 分支及特性分支的基准分支`refs/top-bases/t/feature1`
+
+		@输入`git status`可以看到当前已经切换到`t/feature1`分支,并且Topgit已经创建了`.topdeps`和`.topmsg`文件,并已将这两个
+		 文件加入到暂存区.
+		$ git status
+		>>On branch t/feature1
+		>>Changes to be committed:
+		>>  (use "git reset HEAD <file>..." to unstage)
+
+		>>	new file:   .topdeps
+		>>	new file:   .topmsg
+		$ cat .topdeps
+		>> master
+
+		@打开`.topmsg`文件,会看到下面的内容(前面增加了行号):
+		$ vim .topmsg
+		>>  1 From: cherry <m290236573@gmail.com>
+		>>  2 Subject: [PATCH] t/feature1
+		>>  3
+		>>  4 <patch description>
+		>>  5
+		>>  6 Signed-off-by: cherry <m290236573@gmail.com>
+
+		@其中第二行是关于该特性分支的简短描述.第4行是详细描述,可以写多行.编辑完成,别忘了提交,提交之后才完成Topgit分支的创建.
+		$ git add -u
+		$ git commit -m 'create tg branch t/feature1'
+
+		@如果这时想创建一个新的特性分支`t/feature2`,并且也要依赖master,注意需要在命令行中提供master作为第二个参数,以设定
+		 依赖分支.因为当前所处的分支为`t/feature1`,如果不提供指定的依赖分支就会自动依赖当前分支.
+		$ tg create t/feature2 master
+		$ git commit -m 'create tg branch t/feature2'
+		@下面的命令将创建`t/feature3`分支,该分支依赖`t/feature1`和`t/feature2`.
+		$ tg create t/feature3 t/feature1 t/feature2
+		$ git commit -m 'create tg branch t/feature3'
+
+	<3>.tg info
+
+		@`tg info`命令用于显示当前分支或指定的Topgit分支的信息.用法如下:
+		$ tg [...] info [NAME]
+
+		@其中NAME是可选的Topgit分支名,例如执行下面的命令会显示`t/feature3`的信息.
+		$ tg info
+		>>Topic Branch: t/feature3 (1/1 commit)
+		>>Subject: [PATCH] t/feature3
+		>>Base: 0bdd8e5
+		>>Depends: t/feature1
+		>>t/feature2
+		>>Up-to-date.
+		@切换到`t/feature1`分支,做一些修改并提交.
+		$ git checkout t/feature1
+		$ echo Hi > hacks.txt
+		$ git add hackes.txt
+		$ git commit -m 'hacks in t/feature1.'
+		@然后在来看分支`t/feature3`的状态.
+		$ tg info t/feature3
+		>>Topic Branch: t/feature3 (1/1 commit)
+		>>Subject: [PATCH] t/feature3
+		>>Base: 0bdd8e5
+		>>Depends: t/feature1
+		>>         t/feature2
+		>>Needs update from:
+		>>	t/feature1 (1/1 commit)
+		@状态信息显示`t/feature3`不再是最新的状态(Up-to-date)因为依赖的`t/feature1`分支
+		 包含新的提交,而需要从`t/feature1`获取更新.
+
+	<4>. tg update
+
+		@tg update命令用于更新分支,即从依赖的分支获得最新的提交合并到当前分支,同时在
+		 `refs/top-bases/`命名空间下的特性分支的基准分支也会更新.
+		$ tg [...] update [NAME]
+		@其中NAME是可选的Topgit分支名.下面就对需要更新的`t/feature3`分支执行`tg update`.
+		$ git checkout t/feature3
+		$ tg update
+		>>tg: Updating base with t/feature1 changes...
+		>>Merge made by the 'recursive' strategy.
+		>> hacks.txt | 1 +
+		>> 1 file changed, 1 insertion(+)
+		>> create mode 100644 hacks.txt
+		>>tg: Updating t/feature3 against new base...
+		>>Merge made by the 'recursive' strategy.
+		>> hacks.txt | 1 +
+		>> 1 file changed, 1 insertion(+)
+		>> create mode 100644 hacks.txt
+		@从上面的输出信息可以看出执行了两次分支的合并操作.一次是针对`refs/top-bases/t/feature3`
+		 引用指向的特性分支的基准分支,一次是针对的是`refs/heads/t/feature3`特性分支.
+		@执行`tg update`命令因为要涉及到分支的合并,因此并非每次都会成功,例如在`t/feature3`和
+		 `t/feature1`中同时对一个文件(如hacks.txt)进行修改.然后在`t/feature3`中再次执行`tg update`
+		 可能就会报错,进入冲突解决的状态.
+		$ git checkout t/feature1
+		$ vim hacks.txt
+		$ git add -u
+		$ git commit -m 'upate hackes.txt file.'
+		$ git checkout t/feature3
+		$ vim hacks.txt
+		$ git add -u
+		# git commit -m 'update hackes.txt file.'
+		$ tg info t/feature3
+		>>Topic Branch: t/feature3 (2/1 commits)
+		>>Subject: [PATCH] t/feature3
+		>>Base: e05bc7b
+		>>Depends: t/feature1
+		>>         t/feature2
+		>>Needs update from:
+		>>	t/feature1 (1/1 commit)
+		$ tg update
+		>>tg: Updating base with t/feature1 changes...
+		>>Auto-merging hacks.txt
+		>>CONFLICT (content): Merge conflict in hacks.txt
+		>>Automatic merge failed; fix conflicts and then commit the result.
+		>>tg: Please commit merge resolution and call `git checkout t/feature3 && tg update` again.
+		>>tg: It is also safe to abort this operation using `git reset --hard`,
+		>>tg: but please remember that you are on the base branch now;
+		>>tg: you will want to switch to some normal branch afterwards.
+		@编辑hacks.txt解决冲突.
+		$ git mergetool
+		$ git commit -m 'resolved conflict with t/feature1.'
+		$ tg info
+
+	<5>.tg summary
+		@tg summary命令用于显示Topgit管理的特性分支的列表及各个分支的状态.用法如下:
+		$ tg [...] summary [-t | --sort | --deps | --graphviz]
+		@不带任何参数执行`git summary`是最常用的Topgit命令.
+		`-t` //显示特性分支列表.
+		$ git summary -t
+		>>t/feature1
+		>>t/feature2
+		>>t/feature3
+		`--deps`参数除了显示Topgit特性分支外,还是显示特性分支的依赖分支.
+		$ tg summary --deps
+		>>t/feature1 master
+		>>t/feature2 master
+		>>t/feature3 t/feature1
+		>>t/feature3 t/feature2
+		`--sort`参数安装分支依赖的顺序显示分支列表,除了显示Topic分支外,还会显示依赖的非Topgit分支.
+		$ tg summary --sort
+		>>t/feature3
+		>>t/feature2
+		>>t/feature1
+		>>master
+		`--graphviz`会输出GraphViz格式文件,可以用于显示特性分支之间的关系.
+		$ tg summary --graphviz | dot -T png -o topgit.png //yum install -y graphviz
+		@import doc/img/git-topgit-line-357.png

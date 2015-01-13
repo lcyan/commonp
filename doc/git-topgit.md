@@ -203,6 +203,12 @@ $ make prefix=/usr/local install
 		 在项目的根目录下创建文件`.topdeps`和`.topmsg`还会提示用户编辑`.topmsg`文件,输入详细的特性分支的描述信息.
 		为了试验Topgit命令,找一个示例版本库或干脆创建一个版本库.在示例版本库的master分支下输入如下命令创建一个
 		名为`t/featurel`的特性分支:
+		$ mkdir tgtest
+		$ cd tgtest
+		$ git init
+		$ vim README
+		$ git add -A
+		$ git commit -s -m 'first initial.'
 		$ tg create t/feature1
 		>>tg: Automatically marking dependency on master
 		>>tg: Creating t/feature1 base from master...
@@ -355,3 +361,123 @@ $ make prefix=/usr/local install
 		`--graphviz`会输出GraphViz格式文件,可以用于显示特性分支之间的关系.
 		$ tg summary --graphviz | dot -T png -o topgit.png //yum install -y graphviz
 		@import doc/img/git-topgit-line-357.png
+
+		$ tg summary
+		       	t/feature1                     	[PATCH] t/feature1
+		 0     	t/feature2                     	[PATCH] t/feature2
+		>0     	t/feature3                     	[PATCH] t/feature3
+		@标识'>':(t/feature3分支之前的大于号),用于标记当前所处的特性分支.
+		@标识'0':(t/feature2分支前的数字0)含义是该分支中没有的提交,这是一个建立后尚未使用的废弃的分支.
+		@标记'D'表明该分支处于过时(out-of-date)状态,可能是一个或多个依赖的分支包含了新的提交,尚未合并到
+		 此特性分支.可以用`tg info`命令看出到底是由那个依赖分支的改动导致该特性分支处于过时状态.
+		@标记'B':之前演示中出现过,表明该分支处于Break状态,即可能由于冲突未解决或其他原因导致该特性分支的
+		 基准分支(base)相对该分支的头(head)不匹配,例如`refs/top-bases`下的特性分支的基准分支迁走了,但是
+		 特性分支未完成迁移.
+		@标记'!':表明该分支所依赖的分支不存在.
+		@标记'l':表明该特性分支只存在于本地,不存在于远程跟踪服务器.
+		@标记'r':表明该特性分支既存在于本地,又存在与远程跟踪服务器,并且两者匹配.
+		@标记'L':表明该特性分支,本地比远程跟踪服务器的新.
+		@如果没有传销'l/r/L/R':表明该版本库尚未设置远程版本库.
+		@一般带有标记'r'的是最常见的,也是最正常的.
+
+@@下面要介绍`tg remote`命令为测试版本库建立一个对应的远程版本库,然后就能在`tg srmmary`的输出中看到'l/r/L/R'等标识符了.
+
+	<6>:tg remote
+
+		`tg remote`命令用于为远程版本库增加Topgit的相关设置,以便在和该远程版本库进行`git fetch`,`git pull`等操作时
+		能够同步Topgit的相关分支,命令用法如下:
+
+		$ tg [...] remote [--ppopulate] [REMOTE]
+
+		@其中REMOTE为远程版本库的名称,默认为origin.执行`tg remote`命令会自动在版本的配置文件增加`refs/top-bases`下引用
+		 同步表达式,下面的示例中最后一行就是执行`tg remote origin`后增加的设置.
+
+		 	[remote 'origin']
+		 		url = /path/to/repos/tgtest.git
+		 		fetch = +refs/heads/*:refs/remotes/origin/*
+		 		fetch = +refs/top-bases/*:refs/remotes/origin/top-bases/*
+		@如果使用--populate参数,除了会向上面那么设置默认的Topgit远程版本库外,还会自动执行`git fetch`命令,然后在本地
+		建立Topgit特性分支和对应的基准分支.
+
+		*/
+
+		@当执行tg命令时,如果不用`-r remote`全局参数,则默认使用`origin`远程版本库.
+
+		下面为前面测试的Topgit版本库设置一个远程版本库,具体操作如下:
+
+		(1):先建立一个裸版本库tgtest.git
+
+		$ git init --bare /path/to/repos/tgtest.git
+		>>Initialized empty Git repository in /root/source/gitrepo/tgtest.git/
+
+		(2):然后执行`git remote`,将刚刚创建的版本库以origin为名注册为远程版本库.
+
+		$ git remote add origin /path/to/repos/tgtest.git
+
+		(3):执行`git push`将当前版本库的master分支推送到刚刚创建好的远程版本库.
+
+		$ git push origin master
+
+		>>Counting objects: 3, done.
+		>>Writing objects: 100% (3/3), 237 bytes | 0 bytes/s, done.
+		>>Total 3 (delta 0), reused 0 (delta 0)
+		>>To file:///root/source/gitrepo/tgtest.git/
+		>> * [new branch]      master -> master
+
+		(4):之后运行`tg remote`命令为远程版本库添加额外的配置,以便该远程版本库能够跟踪Topgit分支.
+
+		$ tg remote --polulate origin
+		>>tg: Remote origin can now follow TopGit topic branches.
+		>>tg: Populating local topic branches from remote 'origin'...
+		>>tg: The remote 'origin' is now the default source of topic branches.
+
+		(5):当执行上面的`tg remote`命令后,会在当前版本库的`.git/config`文件中添加设置(以加号开头的行):
+		>> 9 [remote "origin"]
+		>> 10     url = file:///root/source/gitrepo/tgtest.git/
+		>> 11     fetch = +refs/heads/*:refs/remotes/origin/*
+		>> 12     fetch = +refs/top-bases/*:refs/remotes/origin/top-bases/*
+		>> 13 [topgit]
+		>> 14     remote = origin
+		(6)这是在执行`tg summary`会看到分支前面都有标记`l`,即本地分支提交比远程版本库新.
+		>>  l    	t/feature1                     	[PATCH] t/feature1
+		>> 0l    	t/feature2                     	[PATCH] t/feature2
+		>>>0l    	t/feature3                     	[PATCH] t/feature3
+		(7)执行`tg push`命令将特性分支`t/feature2`及其基准分支推送到远程版本库.
+		$ tg push t/feature2
+		>>Counting objects: 4, done.
+		>>Compressing objects: 100% (3/3), done.
+		>>Writing objects: 100% (4/4), 442 bytes | 0 bytes/s, done.
+		>>Total 4 (delta 0), reused 0 (delta 0)
+		>>To file:///root/source/gitrepo/tgtest.git/
+		>> * [new branch]      t/feature2 -> t/feature2
+		>> * [new branch]      refs/top-bases/t/feature2 -> refs/top-bases/t/feature2
+		(8)再来看看`tg summary`,会看到`t/feature2`的标识变为`r`,即远程和本地同步.
+		>>  l    	t/feature1                     	[PATCH] t/feature1
+		>> 0r    	t/feature2                     	[PATCH] t/feature2
+		>>>0l    	t/feature3                     	[PATCH] t/feature3
+		(9)运行`tg push --all`会将所有的Topgit分支推送到远程版本库,之后再来看`tg summary`的输出.
+			会看到所有分支都带上了`r`的标识.
+		$ tg push --all
+		>>Counting objects: 9, done.
+		>>Compressing objects: 100% (7/7), done.
+		>>Writing objects: 100% (9/9), 839 bytes | 0 bytes/s, done.
+		>>Total 9 (delta 3), reused 0 (delta 0)
+		>>To file:///root/source/gitrepo/tgtest.git/
+		>> * [new branch]      t/feature1 -> t/feature1
+		>> * [new branch]      refs/top-bases/t/feature1 -> refs/top-bases/t/feature1
+		>>Everything up-to-date
+		>>Counting objects: 16, done.
+		>>Compressing objects: 100% (13/13), done.
+		>>Writing objects: 100% (16/16), 1.79 KiB | 0 bytes/s, done.
+		>>Total 16 (delta 5), reused 0 (delta 0)
+		>>To file:///root/source/gitrepo/tgtest.git/
+		>> * [new branch]      t/feature3 -> t/feature3
+		>> * [new branch]      refs/top-bases/t/feature3 -> refs/top-bases/t/feature3
+		$ tg summary
+		>>  r    	t/feature1                     	[PATCH] t/feature1
+		>> 0r    	t/feature2                     	[PATCH] t/feature2
+		>>>0r    	t/feature3                     	[PATCH] t/feature3
+
+		@如果版本库设置了多个远程版本库,要针对每一个远程版本库执行`tg remote <REMOTE>`,但只有
+		 一个远程的源用`--populate参数调用`tg remote`将其设置为默认的远程版本库.
+	<7>:tg push

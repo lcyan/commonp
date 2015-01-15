@@ -308,7 +308,7 @@
 	(16)将最后一个补丁应用到版本库,遇到冲突,这是因为最后一个补丁是对中文本地化文件的翻译,
 		因为翻译前的模板文件被更改了所有造成冲突.
 	$ stg push
-	>>Pushing patch "translate-for-chinese" ... 
+	>>Pushing patch "translate-for-chinese" ...
 	>>  Error: Three-way merge tool failed for file "src/locale/zh_CN/LC_MESSAGES/helloworld.po"
 	>>  Error: The merge failed during "push".
 	>>         Use "refresh" after fixing the conflicts or revert the operation with "push --undo".
@@ -326,7 +326,7 @@
 	(22)看看导出补丁的目标目录
 	$ ls pathces
 	>>add-i18n-support fix-typo-help-to-help series translate-for-chinese
-	(23)其中文件series是补丁文件的礼包.列在最前面的补丁先被应用.
+	(23)其中文件series是补丁文件的列表.列在最前面的补丁先被应用.
 	#通过上面的演示可以看出stgit可以非常方便地对提交进行整理,整理提交是无须使用复杂的变基命令,而是采用
 	#提交stgit化,修改文件,执行`stg refresh`的工作流程即可更新补丁和提交.stgit还可以将补丁导出为补丁文件
 	#虽然导出的补丁文件没有像`git format-patch`那样加上代表顺序的数字前缀,但是用文件series标注了补丁文件

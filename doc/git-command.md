@@ -47,13 +47,13 @@ $ git tag
 $ git checkout v2.2.1
 //执行安装
 $ make prefix=/usr/local all doc info
-$ make prefix=/usr/local install install-doc install-html install-info
+$ make -j 4 prefix=/usr/local install install-doc install-html install-info
 
 
 #########################################################################################
 //@@ git core
 $ git config --global user.name 'cherry'
-$ git config --global user.emal 'm290236573@gmail.com'
+$ git config --global user.email 'm290236573@gmail.com'
 $ git config --global alias.ci commit
 // git config -e //打开的是 `/root/source/gitrepo/demo/.git/config`文件进行编辑.
 // git config -e --global //打开的是`/root/.gitconfig`全局配置文件进行编辑.

@@ -3,7 +3,7 @@
 @@作者版本控制系统的三个里程碑
 
 	(1)@Subversion和卖主分支
-	从2005年开始我专心于开源软件的研究,定制开发和整合,在这几年的几年,
+	从2005年开始我专心于开源软件的研究,定制开发和整合,在之后的这几年,
 	一直使用subversion做版本控制,对于定制开发的工作,subversion有一种
 	称为卖主分支(vendor Branch)的模式.
 	@import doc/img/git-topgit-line-9.jpg
@@ -75,7 +75,7 @@
 	而做的一次迁移.提交M2和M4则分别是特性分支A和C因为上游出现了新版本v2.0而
 	做的迁移,当然特性分支B也要做相应的迁移,是为M3.
 
-	上述的图示非常粗糙,因为如果安装这样的设计很难将特性分支导出为补丁文件,
+	上述的图示非常粗糙,因为如果按照这样的设计很难将特性分支导出为补丁文件,
 	例如特性分支B导出为补丁,实际上应该是M2和M3之间的差异.而绝不是a2和M3之间
 	的差异.Topgit为了能够实现将分支导出为补丁,又为每个特性的开发引入了一个
 	特殊的引用(refs/top-bases/\*),用于追踪特性分支的'变基',称为特性分支的基准
@@ -216,7 +216,7 @@ $ make prefix=/usr/local install
 		>>tg: Topic branch t/feature1 set up. Please fill .topmsg now and make initial commit.
 		>>tg: To abort: git rm -f .top* && git checkout master && tg delete t/feature1
 
-		@提示信息以`tg:`开头的是Topgit产生的说明.其中提示用户变基`.topmsg`文件,然后执行一次提交操作完成Topgit特性分支的创建.
+		@提示信息以`tg:`开头的是Topgit产生的说明.其中提示用户编辑`.topmsg`文件,然后执行一次提交操作完成Topgit特性分支的创建.
 
 		@如果想撤销此次操作,删除项目根目录下`.top*`文件,切换到master分支,然后执行`tg delete t/feature1`命令删除`t/feature1`
 		 分支及特性分支的基准分支`refs/top-bases/t/feature1`
@@ -325,18 +325,56 @@ $ make prefix=/usr/local install
 		>>	t/feature1 (1/1 commit)
 		$ tg update
 		>>tg: Updating base with t/feature1 changes...
+		>>Merge made by the 'recursive' strategy.
+		>>hacks.txt | 1 +
+		>>1 file changed, 1 insertion(+)
+		>>tg: Updating t/feature3 against new base...
 		>>Auto-merging hacks.txt
 		>>CONFLICT (content): Merge conflict in hacks.txt
 		>>Automatic merge failed; fix conflicts and then commit the result.
-		>>tg: Please commit merge resolution and call `git checkout t/feature3 && tg update` again.
-		>>tg: It is also safe to abort this operation using `git reset --hard`,
-		>>tg: but please remember that you are on the base branch now;
-		>>tg: you will want to switch to some normal branch afterwards.
+		>>tg: Please commit merge resolution. No need to do anything else
+		>>tg: You can abort this operation using `git reset --hard` now
+		>>tg: and retry this merge later using `tg update`.
+		@执行`tg info`命令查看一下当前分支`t/feature3`的状态
+		$ tg info
+		>>Topic Branch: t/feature3 (3/2 commits)
+		>>Subject: [PATCH] t/feature3
+		>>Base: 394228b
+		>>* Base is newer than head! Please run `tg update`.
+		>>Depends: t/feature1
+		>>         t/feature2
+		>>Up-to-date.
+		从上面`tg info`命令的输出可以看出当前分支的状态是'Up to date',但是输出
+		包含了一个提示:分支的基(Base)要比头(HEAD)新,请执行`tg update`.
+		这是如果执行`tg summary`命令的话,可以看到`t/feature3`处于'B(Break)'状态.
+		$ tg summary
+		>>			t/feature1                     	[PATCH] t/feature1
+		>> 0     	t/feature2                     	[PATCH] t/feature2
+		>>>     B	t/feature3                     	[PATCH] t/feature3
+		@执行`git status`命令,可以看出因为两个分支同时修改了文件'hacks.txt'而导致冲突.
+		$ git status
+		>>On branch t/feature3
+		>>You have unmerged paths.
+		>>  (fix conflicts and run "git commit")
+
+		>>Unmerged paths:
+		>>  (use "git add <file>..." to mark resolution)
+
+		>>	both modified:   hacks.txt
+
+		>>no changes added to commit (use "git add" and/or "git commit -a")
+		可以变基hacks.txt文件,或者调用冲突解决工具解决冲突,之后在提交,这才真正
+		完成了此次`tg update`
 		@编辑hacks.txt解决冲突.
 		$ git mergetool
 		$ git commit -m 'resolved conflict with t/feature1.'
 		$ tg info
-
+		>>Topic Branch: t/feature3 (4/2 commits)
+		>>Subject: [PATCH] t/feature3
+		>>Base: 394228b
+		>>Depends: t/feature1
+		>>         t/feature2
+		>>Up-to-date.
 	<5>.tg summary
 		@tg summary命令用于显示Topgit管理的特性分支的列表及各个分支的状态.用法如下:
 		$ tg [...] summary [-t | --sort | --deps | --graphviz]
@@ -352,7 +390,7 @@ $ make prefix=/usr/local install
 		>>t/feature2 master
 		>>t/feature3 t/feature1
 		>>t/feature3 t/feature2
-		`--sort`参数安装分支依赖的顺序显示分支列表,除了显示Topic分支外,还会显示依赖的非Topgit分支.
+		`--sort`参数按照分支依赖的顺序显示分支列表,除了显示Topic分支外,还会显示依赖的非Topgit分支.
 		$ tg summary --sort
 		>>t/feature3
 		>>t/feature2
@@ -362,10 +400,11 @@ $ make prefix=/usr/local install
 		$ tg summary --graphviz | dot -T png -o topgit.png //yum install -y graphviz
 		@import doc/img/git-topgit-line-357.png
 
+		不带任何参数执行`tg summary`显示分支列表及状态.也是最常用的Topgit命令之一.
 		$ tg summary
 		       	t/feature1                     	[PATCH] t/feature1
 		 0     	t/feature2                     	[PATCH] t/feature2
-		>0     	t/feature3                     	[PATCH] t/feature3
+		>     	t/feature3                     	[PATCH] t/feature3
 		@标识'>':(t/feature3分支之前的大于号),用于标记当前所处的特性分支.
 		@标识'0':(t/feature2分支前的数字0)含义是该分支中没有的提交,这是一个建立后尚未使用的废弃的分支.
 		@标记'D'表明该分支处于过时(out-of-date)状态,可能是一个或多个依赖的分支包含了新的提交,尚未合并到
@@ -387,7 +426,7 @@ $ make prefix=/usr/local install
 		`tg remote`命令用于为远程版本库增加Topgit的相关设置,以便在和该远程版本库进行`git fetch`,`git pull`等操作时
 		能够同步Topgit的相关分支,命令用法如下:
 
-		$ tg [...] remote [--ppopulate] [REMOTE]
+		$ tg [...] remote [--populate] [REMOTE]
 
 		@其中REMOTE为远程版本库的名称,默认为origin.执行`tg remote`命令会自动在版本的配置文件增加`refs/top-bases`下引用
 		 同步表达式,下面的示例中最后一行就是执行`tg remote origin`后增加的设置.
@@ -438,10 +477,10 @@ $ make prefix=/usr/local install
 		>> 12     fetch = +refs/top-bases/*:refs/remotes/origin/top-bases/*
 		>> 13 [topgit]
 		>> 14     remote = origin
-		(6)这是在执行`tg summary`会看到分支前面都有标记`l`,即本地分支提交比远程版本库新.
+		(6)这时在执行`tg summary`会看到分支前面都有标记`l`,即本地分支提交比远程版本库新.
 		>>  l    	t/feature1                     	[PATCH] t/feature1
 		>> 0l    	t/feature2                     	[PATCH] t/feature2
-		>>>0l    	t/feature3                     	[PATCH] t/feature3
+		>>> l    	t/feature3                     	[PATCH] t/feature3
 		(7)执行`tg push`命令将特性分支`t/feature2`及其基准分支推送到远程版本库.
 		$ tg push t/feature2
 		>>Counting objects: 4, done.
@@ -479,5 +518,325 @@ $ make prefix=/usr/local install
 		>>>0r    	t/feature3                     	[PATCH] t/feature3
 
 		@如果版本库设置了多个远程版本库,要针对每一个远程版本库执行`tg remote <REMOTE>`,但只有
-		 一个远程的源用`--populate参数调用`tg remote`将其设置为默认的远程版本库.
+		 一个远程的源用`--populate`参数调用`tg remote`将其设置为默认的远程版本库.
+
+		 */
 	<7>:tg push
+
+		@在前面`tg remote`的介绍中,已经看到过`tg push`命令,`tg push`命令用于将Topgit特性分支
+		 及对应的基准分支推送到远程版本库.用法如下:
+
+		$ tg [...] push [--dry-run] [--no-deps] [--tgish-only] [--all|branch*]
+
+		'tg push'命令后面的参数指定要推送给远程服务器的分支列表,如果省略了则推送当前分支.
+		改进的`tg push`命令支持通过`--all`参数将所有'Topgit'特性分支推送到远程版本库.
+
+		参数'--dry-run'用于测试推送的执行效果,而不是真正的执行.
+		参数'--no-deps'的含义是不推送依赖的分支,默认推送.
+		参数'--tgish-noly'的含义是只推送Topgit特性分支,默认推送指定的所有分支.
+
+	<8>:tg depend
+
+		'tg depend'命令目前仅实现了为当前的Topgit特性分支增加了新的依赖,用法如下:
+		$ tg [...] depend add NAME
+		将NAME加入到文件`.topdeps`中,并将NAME分支向该特性分支及特性分支的基准分支进行合并
+		操作.虽然Topgit可以检查到分支的循环依赖,但还是要注意合理地设置分支的依赖.合并重复
+		的依赖.
+
+	<9>:tg base
+
+		'tg base'命令用于显示特性分支的基准分支的提交ID(精简格式)
+
+	<10>:tg delete
+
+		'tg delete'命令用于删除Topgit特性分支及其对应的基准分支.用法如下:
+
+		$ tg [...] delete [-f] NAME
+
+		默认只删除没有改动的分支,即标记为'0'的分支,除非使用'-f'参数.
+		目前此命令尚不能自动清除其分支中对删除分支的依赖.还需要手工调整'.topdeps'文件,
+		删除对不存在的分支的依赖.
+
+	<11>: tg patch
+
+		'tg patch'命令通过比较特性分支及其基准分支的差异,显示该特性分支的补丁,用法如下:
+
+		$ tg [...] patch [-i | -w] [NAME]
+
+		其中'-i'参数显示暂存区和基准分支的差异.'-w'参数显示工作区和基准分支的差异.
+
+		'tg patch'命令存在的一个问题是只能正确显示工作区中的根执行.这个缺陷已经在我的改进的Topgit
+		中被改正.
+
+	<12>:tg export
+
+		'tg export'命令用于导出特性分支及其依赖,便于向上游贡献.可以导出Quilt格式的补丁列表.或者顺序
+		提交到另外的分支中.用法如下:
+
+		$ tg [...] export ([--collapse] NEWBRANCH | [--all | -b BRANCH1,BRANCH2...] --quilt DIRECTORY | --linearize NEWBRANCH)
+
+		这个命令有三种导出的方法:
+
+		(1):将所有的Topgit特性分支压缩为一个,提交到新的分支.
+
+		$ tg [...] export --collapse NEWBRANCH
+
+		(2):将所有的Topgit特性分支按照顺序提交到一个新的分支中.
+
+		$ tg [...] export --linearize NEWBRANCH
+
+		(3):将指定的Topgit分支(一个或多个)及其依赖分支转换为Quilt格式的斌定.保存到指定的目录中.
+
+		$ tg [...] export -b BRANCH1,BRANCH2... --quilt DIRECTORY
+
+		在导出为Quilt格式补丁的时候,如果将所有的分支导出,
+		必须使用'-b'参数将分支全部罗列(或者分支的依赖关系将所有分支囊括),这对于需要导出所有
+		分支的操作非常不方便.我改进的Topgit通过'--all'参数实现了所有分支的导出.
+
+	<13>: tg import
+
+		'tg import'命令将分支的提交转换为'Topgit'特性分支,指定范围的每个提交都转换为一个特性分支,
+		各个特性分支之间线性依赖.用法如下:
+
+		$ tg [...] import [-d BASE_BRANCH] {[-p PREFIX] range...| -s NAME COMMIT}
+
+		如果不使用'-d'参数,特性分支则以当前分支为依赖.特性分支名称自动生成.使用约定俗成的't/'作为前缀.
+		也可以通过'-p'参数指定其他前缀.可以通过'-s'参数设定特性分支的名称.
+
+	<14>: tg log
+
+		'tg log'命令实际上是对'git log'命令的封装.这个命令通过'--no-merges'和'--first-parent'参数调用
+		'git log'虽然屏蔽了大量因和依赖分支合并而引入的依赖分支的提交日志,但是同时也屏蔽了合并到该特性
+		分支的其他贡献者的提交.
+
+	<15>: tg mail
+
+		'tg mail'调用'git send-mail'发送邮件,参数'-s'用于向该命令传递参数(需要用双引号括起来).邮件中
+		的目的地址从补丁文件头中的'To','Cc','Bcc'等字段获取.参数'-r'引用回复邮件的ID以便正确地生成
+		'in-reply-to'邮件头.
+		Note:此命令可能会发送多封邮件,可以通过如下设置在调用'git send-email'命令发送邮件是进行确认.
+
+		$ git config sendemail.confirm always
+
+	<16>:tg files
+
+		'tg files'命令用于显示当前或指定的特性分支改动了那些文件.
+
+	<17>:tg prev
+
+		'tg prev'命令用于显示当前或指定的特性分支所依赖的分支名.
+
+	<18>:tg next
+
+		'tg next'命令用于显示当前或指定的特性分支被其他那些特性分支所依赖.
+
+	<19>:tg graph
+
+		'tg graph'命令并非官方提供的命令.而是源自一个补丁,实现文本方式的Topgit分支图.当然这个
+		文本分支图没有'tg summary --graphviz'生成的那么漂亮.
+
+@@用Topgit方式改造Topgit
+
+	在Topgit的使用中陆续发现了一些不合用的地方,于是便以Topgit特性分支的方式来对Topgit进行改造.
+
+	<1>:Topgit(1):tg push 全部分支.
+	<2>:Topgit(2):tg导出全部分支.
+	<3>:Topgit(3):更灵活的'tg patch'
+	<4>:Topgit(4):tg的命令补齐
+	<5>:Topgit(5):'tg summary'执行的更快.
+
+	下面就以Topgit改造过程为例,来介绍如何参与一个Topgit管理下的项目的开发,改造后Topgit版本库
+	的地址为:'git://github.com/ossxp-com/topgit.git'
+
+	1.首先克隆该版本库.
+
+	$ git clone git://github.com/ossxp-com/topgit.git
+	$ cd topgit
+	查看远程分支
+	$ git branch -r
+	>>origin/HEAD -> origin/master
+	>>origin/master
+	>>origin/t/debian_locations
+	>>origin/t/delete-remote-branch
+	>>origin/t/export_quilt_all
+	>>origin/t/fast_tg_summary
+	>>origin/t/git-merge-no-edit
+	>>origin/t/graphviz_layout
+	>>origin/t/mac_os_x
+	>>origin/t/prune-stale-remote-branch
+	>>origin/t/tg_completion_bugfix
+	>>origin/t/tg_graph_ascii_output
+	>>origin/t/tg_patch_binary
+	>>origin/t/tg_patch_cdup
+	>>origin/t/tg_push_all
+	>>origin/tgmaster
+
+	看到了远程分支中出现了属性的以't/'为前缀的Topgit分支.说明这个版本库是一个用Topgit进行管理
+	的版本库.为了能够获取Topgit各个特性分支的基准分支,需要用'tg remote'命令对默认的origin远程
+	版本库注册一下.
+
+	$ tg remote --polulate origin
+	>>tg: Remote origin can now follow TopGit topic branches.
+	>>tg: Populating local topic branches from remote 'origin'...
+	>>From git://github.com/ossxp-com/topgit
+	>>* [new ref]         refs/top-bases/t/debian_locations -> origin/top-bases/t/debian_locations
+	>>* [new ref]         refs/top-bases/t/delete-remote-branch -> origin/top-bases/t/delete-remote-branch
+	>>* [new ref]         refs/top-bases/t/export_quilt_all -> origin/top-bases/t/export_quilt_all
+	>>* [new ref]         refs/top-bases/t/fast_tg_summary -> origin/top-bases/t/fast_tg_summary
+	>>* [new ref]         refs/top-bases/t/git-merge-no-edit -> origin/top-bases/t/git-merge-no-edit
+	>>* [new ref]         refs/top-bases/t/graphviz_layout -> origin/top-bases/t/graphviz_layout
+	>>* [new ref]         refs/top-bases/t/mac_os_x -> origin/top-bases/t/mac_os_x
+	>>* [new ref]         refs/top-bases/t/prune-stale-remote-branch -> origin/top-bases/t/prune-stale-remote-branch
+	>>* [new ref]         refs/top-bases/t/tg_completion_bugfix -> origin/top-bases/t/tg_completion_bugfix
+	>>* [new ref]         refs/top-bases/t/tg_graph_ascii_output -> origin/top-bases/t/tg_graph_ascii_output
+	>>* [new ref]         refs/top-bases/t/tg_patch_binary -> origin/top-bases/t/tg_patch_binary
+	>>* [new ref]         refs/top-bases/t/tg_patch_cdup -> origin/top-bases/t/tg_patch_cdup
+	>>* [new ref]         refs/top-bases/t/tg_push_all -> origin/top-bases/t/tg_push_all
+	>>tg: Adding branch t/debian_locations...
+	>>tg: Adding branch t/delete-remote-branch...
+	>>tg: Adding branch t/export_quilt_all...
+	>>tg: Adding branch t/fast_tg_summary...
+	>>tg: Adding branch t/git-merge-no-edit...
+	>>tg: Adding branch t/graphviz_layout...
+	>>tg: Adding branch t/mac_os_x...
+	>>tg: Adding branch t/prune-stale-remote-branch...
+	>>tg: Adding branch t/tg_completion_bugfix...
+	>>tg: Adding branch t/tg_graph_ascii_output...
+	>>tg: Adding branch t/tg_patch_binary...
+	>>tg: Adding branch t/tg_patch_cdup...
+	>>tg: Adding branch t/tg_push_all...
+	>>tg: The remote 'origin' is now the default source of topic branches.
+
+	@@执行'tg summary'查看一下本地Topgit特性分支的状态.
+
+	$ tg summary
+	>>  r  ! 	t/debian_locations             	[PATCH] make file locations Debian-compatible
+	>>  r  ! 	t/delete-remote-branch         	[PATCH] When delete branch, delete it's remote couterparts
+	>>  r  ! 	t/export_quilt_all             	[PATCH] t/export_quilt_all
+	>>  r  ! 	t/fast_tg_summary              	[PATCH] t/fast_tg_summary
+	>>  r  ! 	t/git-merge-no-edit            	[PATCH] No stop to edit for the new merge behavior of git
+	>>  r  ! 	t/graphviz_layout              	[PATCH] t/graphviz_layout
+	>>  r  ! 	t/mac_os_x                     	[PATCH] t/mac_os_x
+	>>  r  ! 	t/prune-stale-remote-branch    	[PATCH] prune stale remote branch when update
+	>>  r  ! 	t/tg_completion_bugfix         	[PATCH] t/tg_completion_bugfix
+	>>  r    	t/tg_graph_ascii_output        	[PATCH] t/tg_graph_ascii_output
+	>>  r  ! 	t/tg_patch_binary              	[PATCH] Save diff of binary files in patch
+	>> 0r  ! 	t/tg_patch_cdup                	[PATCH] t/tg_patch_cdup
+	>>  r  ! 	t/tg_push_all                  	[PATCH] t/tg_push_all
+
+	怎么?出现了感叹号?记得前面在介绍'tg summary'命令的章节中提到过,感叹号的出现说明该特性分支所依赖的分支丢失了.
+	用'tg info'查看一下其中的某个特性分支.
+
+	$ tg info e/export_quilt_all
+	>>Topic Branch: t/export_quilt_all (7/4 commits)
+	>>Subject: [PATCH] t/export_quilt_all
+	>>Base: d279e29
+	>>Remote Mate: origin/t/export_quilt_all
+	>>Depends: tgmaster
+	>>MISSING: tgmaster
+	>>Up-to-date.
+
+	@原来该特性分支依赖'tgmaster'分支,而不是'master'分支.远程存在'tgmaster'分支而本地不存在.于是在本地建立'tgmaster'跟踪分支.
+
+	$ git checkout tgmaster //若版本小于1.6.6 执行 $ git checkout -b tgmaster origin/master
+
+	>>Branch tgmaster set up to track remote branch tgmaster from origin.
+	>>Switched to a new branch 'tgmaster'
+
+	@再次执行'tg summary'命令,这次的输出就正常了.
+
+	$ tg summary
+	>>  r    	t/debian_locations             	[PATCH] make file locations Debian-compatible
+	>>  r    	t/delete-remote-branch         	[PATCH] When delete branch, delete it's remote couterparts
+	>>  r    	t/export_quilt_all             	[PATCH] t/export_quilt_all
+	>>  r    	t/fast_tg_summary              	[PATCH] t/fast_tg_summary
+	>>  r    	t/git-merge-no-edit            	[PATCH] No stop to edit for the new merge behavior of git
+	>>  r    	t/graphviz_layout              	[PATCH] t/graphviz_layout
+	>>  r    	t/mac_os_x                     	[PATCH] t/mac_os_x
+	>>  r    	t/prune-stale-remote-branch    	[PATCH] prune stale remote branch when update
+	>>  r    	t/tg_completion_bugfix         	[PATCH] t/tg_completion_bugfix
+	>>  r    	t/tg_graph_ascii_output        	[PATCH] t/tg_graph_ascii_output
+	>>  r    	t/tg_patch_binary              	[PATCH] Save diff of binary files in patch
+	>> 0r    	t/tg_patch_cdup                	[PATCH] t/tg_patch_cdup
+	>>  r    	t/tg_push_all                  	[PATCH] t/tg_push_all
+
+	@通过下面的命令创建图形化分支图:
+
+	$ tg summary --graphviz | dot -T png -o topgit.png
+	@import doc/img/git-topgit-line-766.png
+
+	@其中:
+		1.特性分支't/export_quilt_all'.为'tg export --quilt'命令增加'--all'选项,以便导出所有的特性分支.
+		2.特性分支't/fast_tg_summary',主要是改进'tg'命令补齐时分支的显示进度.当特性分支接近上百个时差异非常明显.
+		3.特性分支't/graphviz_layout',改进了分支的图形输出格式.
+		4.特性分支't/tg_completion_bugfix',解决了命令补齐的一个bug.
+		5.特性分支't/tg_graph_ascii_output',源自'Bert Wesarg'的贡献,非常巧妙地实现了文本话分支图显示.展示了'gvpr'命令的强大功能.
+		6.特性分支't/tg_patch_cdup',解决了在项目的子目录下无法执行'tg patch'的问题.
+		7.特性分支't/tg_push_all',通过为'tg push'增加一个'--all'选项,解决了当'tg'从0.7升级到0.8版后,无法批量向上游推送特性分支的问题.
+
+	@@下面展示一下如何跟踪上游的最新改动,并迁移到新的上游版本.分支'tgmaster'用于跟踪上游的'Topgit'分支.以't/'开头的分支是对'Topgit'
+	  改进的特性分支,而'master'分支实际上是导出'Topgit'补丁文件并负责编译特定Linux平台发行包的分支.
+
+	  (1)把官方的Topgit版本库以'upstream'的名称加入作为新的远程版本库.
+
+	  $ git remote add upstream git://repo.or.cz/topgit.git
+
+	  (2)然后将'upstream'远程版本的'master'分支合并到本地的'tgmaster'分支.
+
+	  $ git pull upstream master:tgmaster
+	  >>remote: Counting objects: 113, done.
+	  >>remote: Compressing objects: 100% (50/50), done.
+	  >>remote: Total 94 (delta 60), reused 78 (delta 44)
+	  >>Unpacking objects: 100% (94/94), done.
+	  >>From git://repo.or.cz/topgit
+	  >>d279e29..f2815f4  master     -> tgmaster
+	  >>* [new tag]         topgit-0.1 -> topgit-0.1
+	  >>* [new tag]         topgit-0.2 -> topgit-0.2
+	  >>* [new tag]         topgit-0.3 -> topgit-0.3
+	  >>* [new tag]         topgit-0.4 -> topgit-0.4
+	  >>* [new tag]         topgit-0.5 -> topgit-0.5
+	  >>* [new tag]         topgit-0.6 -> topgit-0.6
+	  >>* [new tag]         topgit-0.7 -> topgit-0.7
+	  >>* [new tag]         topgit-0.8 -> topgit-0.8
+	  >>* [new tag]         topgit-0.9 -> topgit-0.9
+	  >>* [new branch]      master     -> upstream/master
+	  >>Warning: fetch updated the current branch head.
+	  >>Warning: fast-forwarding your working tree from
+	  >>Warning: commit d279e292a787fa733746c3d15209c70e5596ab10.
+	  >>Already up-to-date.
+
+	  (3)此时在执行'tg summary'会发现所有的Topgit分支都多了一个标记'D',表明因为依赖分支
+	  的更新而导致'Topgit'特性分支过时了.
+	  $ tg summary
+	  >> r D  	t/debian_locations             	[PATCH] make file locations Debian-compatible
+	  >> r D  	t/delete-remote-branch         	[PATCH] When delete branch, delete it's remote couterparts
+	  >> r D  	t/export_quilt_all             	[PATCH] t/export_quilt_all
+	  >> r D  	t/fast_tg_summary              	[PATCH] t/fast_tg_summary
+	  >> r D  	t/git-merge-no-edit            	[PATCH] No stop to edit for the new merge behavior of git
+	  >> r D  	t/graphviz_layout              	[PATCH] t/graphviz_layout
+	  >> r D  	t/mac_os_x                     	[PATCH] t/mac_os_x
+	  >> r D  	t/prune-stale-remote-branch    	[PATCH] prune stale remote branch when update
+	  >> r D  	t/tg_completion_bugfix         	[PATCH] t/tg_completion_bugfix
+	  >> r D  	t/tg_graph_ascii_output        	[PATCH] t/tg_graph_ascii_output
+	  >> r D  	t/tg_patch_binary              	[PATCH] Save diff of binary files in patch
+	  >>0r D  	t/tg_patch_cdup                	[PATCH] t/tg_patch_cdup
+	  >> r D  	t/tg_push_all                  	[PATCH] t/tg_push_all
+
+	  (4)依次对各个分支执行'tg update',完成对更新的依赖分支的合并.
+	  $ tg update t/export_quilt_all
+	  ...
+
+	  (5)对各个分支完成更新后,会发现'tg summary'的输出中,标识过时的'D'标记变为'L',即本地分支要比远程服务器分支要新.
+
+	  (6)执行'tg push --all'就可以实现将所有的特性分支推送到远程服务器上.
+
+@@Topgit使用中注意事项
+
+	1.经常运行'tg remote --polulate'获取他人创建的特性分支.
+	@运行命令'git fetch'或命令'git pull'和远程版本库同步,只能将他人创建的Topgit特性分支在本地以远程分支(refs/remote/origin/t/<branch-name>)
+	 的方式保存.而不能自动在本地建立分支.
+
+	@如果确认版本库是使用Topgit维护的话,应该在和远程版本库同步的时候执行'tg remote --populate origin'这条命令会做两件事情.
+
+		1.自动调用'git fetch origin'获取远程'origin'版本库新的提交和引用.
+		2.检查'refs/remotes/origin/top-bases/'下的所有引用,如果是新的,在本地(refs/top-bases)尚不存在,Topgit会据此自动在本地创建新的特性分支.

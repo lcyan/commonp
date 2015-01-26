@@ -44,6 +44,9 @@
 	<mvc:resources mapping="/resources/**" location="/resources/" />
 
 	<mvc:default-servlet-handler />
+    
+    <!-- 定义无需Controller的url<->view直接映射 -->
+    <mvc:view-controller path="/" view-name="redirect:/rest/version"/>
 
 	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
 	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">

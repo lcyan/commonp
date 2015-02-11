@@ -28,11 +28,11 @@
 		<jackson.version>2.4.0</jackson.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<logback.version>1.1.2</logback.version>
-		<httpclient.version>4.3.6</httpclient.version>
+		<httpclient.version>4.4</httpclient.version>
 		<commons-lang3.version>3.3.2</commons-lang3.version>
 		<commons-io.version>2.4</commons-io.version>
 		<guava.version>18.0</guava.version>
-		<joda-time.version>2.4</joda-time.version>
+		<joda-time.version>2.7</joda-time.version>
 		<dozer.version>5.5.1</dozer.version>
 		<freemarker.version>2.3.20</freemarker.version>
 		<aspectj.version>1.7.4</aspectj.version>
@@ -42,18 +42,62 @@
 		<powermock.version>1.5.5</powermock.version>
 		<selenium.version>2.42.2</selenium.version>
 		<nosqlunit.version>0.7.9</nosqlunit.version>
-		<jetty.version>7.6.15.v20140411</jetty.version>
+		<jetty.version>9.2.5.v20141112</jetty.version>
 		<h2.version>1.3.176</h2.version>
 		<jpush.version>3.2.3</jpush.version>
-		<!-- Plugin的属性 -->
+		<cometd.version>3.0.3</cometd.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.7</java.version>
+		<javax.websocket.version>1.1</javax.websocket.version>
 	</properties>
 
 	<prerequisites>
 		<maven>3.0.0</maven>
 	</prerequisites>
 	<dependencies>
+		<!-- add cometd support -->
+		<dependency>
+			<groupId>javax.websocket</groupId>
+			<artifactId>javax.websocket-client-api</artifactId>
+			<version>${javax.websocket.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.websocket</groupId>
+			<artifactId>javax.websocket-api</artifactId>
+			<version>${javax.websocket.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.cometd.java</groupId>
+			<artifactId>bayeux-api</artifactId>
+			<version>${cometd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cometd.javascript</groupId>
+			<artifactId>cometd-javascript-jquery</artifactId>
+			<version>${cometd.version}</version>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>org.cometd.java</groupId>
+			<artifactId>cometd-java-server</artifactId>
+			<version>${cometd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cometd.java</groupId>
+			<artifactId>cometd-java-websocket-javax-server</artifactId>
+			<version>${cometd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cometd.java</groupId>
+			<artifactId>cometd-java-annotations</artifactId>
+			<version>${cometd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-servlets</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
 		<!-- add jpush support -->
 		<dependency>
 			<groupId>cn.jpush.api</groupId>
@@ -201,7 +245,7 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-			<version>3.0.1</version>
+			<version>3.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -695,20 +739,6 @@
 			</exclusions>
 		</dependency>
 
-		<!-- jetty -->
-		<dependency>
-			<groupId>org.eclipse.jetty.aggregate</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<version>${jetty.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-jsp</artifactId>
-			<version>${jetty.version}</version>
-			<scope>test</scope>
-		</dependency>
-
 		<!-- h2 -->
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -886,11 +916,6 @@
 				<version>2.5.1</version>
 			</plugin>
 			<!-- jetty插件 -->
-			<plugin>
-				<groupId>org.mortbay.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>${jetty.version}</version>
-			</plugin>
 			<!-- tomcat插件 -->
 			<plugin>
 				<groupId>org.apache.tomcat.maven</groupId>

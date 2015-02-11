@@ -22,6 +22,9 @@
 	<logger name="org.springframework.beans.factory">
 		<level value="info" />
 	</logger>
+	<logger name="org.cometd">
+		<level value="info" />
+	</logger>
 
 	<logger name="org.springframework.jdbc.core.JdbcTemplate">
 		<level value="debug" />

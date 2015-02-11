@@ -227,3 +227,31 @@
 	  $ cd /path/to/my/workspace/super-clon/
 	  % git status -s
 	  >> M lib/lib_a
+	  (2)查看差异比较,会看到执行子模组的gitlink有改动.
+	  $ git diff
+	  >>diff --git a/lib/lib_a b/lib/lib_a
+	  >>index 5030826..cf158cf 160000
+	  >>--- a/lib/lib_a
+	  >>+++ b/lib/lib_a
+	  >>@@ -1 +1 @@
+	  >>-Subproject commit 50308269123a924a45416c3d8a937c658e704f62
+	  >>+Subproject commit cf158cf2693d581b3356d26f12663f5837915eb9
+	  (3)将gitlink的改动添加到暂存区,然后提交.
+	  $ git add -u
+	  $ git commit -m 'submodule lib/lib_a upgrade to new version.'
+
+	  @此时先不要忙着推送,因为如果此时执行'git push'将super版本库推送到远程版本库,会引发一个问题,
+	  即推送后的远程'super'版本库的子模组'lib/lib_a'指向了一个新的提交,而该提交还是本地的'lib/lib_a'
+	  版本库(尚未向上游推送),这会导致其他人克隆super版本库和更新模组时因为找不到该子模组版本库相应的
+	  提交而出错.下面就是这类错误信息:
+	  >>fatal: refernce is not a tree: 50308269123a924a45416c3d8a937c658e704f62
+	  Unable to checkout 'cf158cf2693d581b3356d26f12663f5837915eb9' in submodule path 'lib/lib_a'
+
+	  @为了避免这种可能性的发生,最好先推送'lib/lib_a'中的新提交,然后再向super版本库推送更新的子模组
+	  'gitlink'改动,即:
+	  (1)先推送子模组
+	  $ cd /path/to/my/workspace/super-clone/lib/lib_a
+	  $ git push
+	  (2)再推送父版本库.
+	  $ cd /path/to/my/workspace/super-clone
+	  $ git push

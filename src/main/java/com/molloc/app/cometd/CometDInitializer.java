@@ -3,6 +3,7 @@ package com.molloc.app.cometd;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
 import org.cometd.annotation.ServerAnnotationProcessor;
@@ -12,7 +13,6 @@ import org.cometd.server.transport.JSONPTransport;
 import org.cometd.server.transport.JSONTransport;
 import org.cometd.websocket.server.WebSocketTransport;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -34,7 +34,8 @@ public class CometDInitializer implements ServletContextAware
         return bean;
     }
 
-    public void setServletContext(ServletContext servletContext)
+    @Override
+	public void setServletContext(ServletContext servletContext)
     {
         this.servletContext = servletContext;
     }
@@ -42,7 +43,7 @@ public class CometDInitializer implements ServletContextAware
     @Component
     public static class Processor implements DestructionAwareBeanPostProcessor
     {
-        @Autowired
+    	@Inject
         private BayeuxServer bayeuxServer;
         private ServerAnnotationProcessor processor;
 
@@ -57,7 +58,8 @@ public class CometDInitializer implements ServletContextAware
         {
         }
 
-        public Object postProcessBeforeInitialization(Object bean, String name) throws BeansException
+        @Override
+		public Object postProcessBeforeInitialization(Object bean, String name) throws BeansException
         {
             processor.processDependencies(bean);
             processor.processConfigurations(bean);
@@ -65,12 +67,14 @@ public class CometDInitializer implements ServletContextAware
             return bean;
         }
 
-        public Object postProcessAfterInitialization(Object bean, String name) throws BeansException
+        @Override
+		public Object postProcessAfterInitialization(Object bean, String name) throws BeansException
         {
             return bean;
         }
 
-        public void postProcessBeforeDestruction(Object bean, String name) throws BeansException
+        @Override
+		public void postProcessBeforeDestruction(Object bean, String name) throws BeansException
         {
             processor.deprocessCallbacks(bean);
         }

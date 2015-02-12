@@ -28,7 +28,6 @@
 		<url-pattern>/cometd/*</url-pattern>
 	</filter-mapping>
 	<!-- cometd end -->
-	<!-- Creates the Spring Container shared by all Servlets and Filters -->
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
@@ -47,19 +46,6 @@
 	<servlet-mapping>
 		<servlet-name>appServlet</servlet-name>
 		<url-pattern>/</url-pattern>
-	</servlet-mapping>
-	<!-- Java Simple Monitoring Console Servlet -->
-	<servlet>
-		<servlet-name>SimonConsoleServlet</servlet-name>
-		<servlet-class>org.javasimon.console.SimonConsoleServlet</servlet-class>
-		<init-param>
-			<param-name>url-prefix</param-name>
-			<param-value>/javasimon</param-value>
-		</init-param>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>SimonConsoleServlet</servlet-name>
-		<url-pattern>/javasimon/*</url-pattern>
 	</servlet-mapping>
 	<!-- Character Encoding filter -->
 	<filter>

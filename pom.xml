@@ -57,17 +57,6 @@
 	<dependencies>
 		<!-- add cometd support -->
 		<dependency>
-			<groupId>javax.websocket</groupId>
-			<artifactId>javax.websocket-client-api</artifactId>
-			<version>${javax.websocket.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.websocket</groupId>
-			<artifactId>javax.websocket-api</artifactId>
-			<version>${javax.websocket.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.cometd.java</groupId>
 			<artifactId>bayeux-api</artifactId>
 			<version>${cometd.version}</version>
@@ -97,6 +86,18 @@
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-servlets</artifactId>
 			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.websocket</groupId>
+			<artifactId>javax-websocket-server-impl</artifactId>
+			<version>${jetty.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-webapp</artifactId>
+			<version>${jetty.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<!-- add jpush support -->
 		<dependency>
@@ -143,11 +144,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring-jms</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
@@ -155,12 +151,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-instrument</artifactId>
 			<version>${spring.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-framework-bom</artifactId>
-			<version>${spring.version}</version>
-			<type>pom</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -289,90 +279,6 @@
 		</dependency>
 		<!-- SECURITY end -->
 
-		<!-- SOAP begin -->
-		<dependency>
-			<groupId>org.apache.cxf</groupId>
-			<artifactId>cxf-rt-core</artifactId>
-			<version>${cxf.version}</version>
-			<exclusions>
-				<!-- use javax.mail.mail instead -->
-				<exclusion>
-					<groupId>org.apache.geronimo.specs</groupId>
-					<artifactId>geronimo-javamail_1.4_spec</artifactId>
-				</exclusion>
-				<!-- use javax.activation.activation instead -->
-				<exclusion>
-					<groupId>org.apache.geronimo.specs</groupId>
-					<artifactId>geronimo-activation_1.1_spec</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.cxf</groupId>
-			<artifactId>cxf-rt-frontend-jaxws</artifactId>
-			<version>${cxf.version}</version>
-			<exclusions>
-				<!-- see above -->
-				<exclusion>
-					<groupId>org.apache.geronimo.specs</groupId>
-					<artifactId>geronimo-javamail_1.4_spec</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.geronimo.specs</groupId>
-					<artifactId>geronimo-activation_1.1_spec</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.cxf</groupId>
-			<artifactId>cxf-rt-transports-http</artifactId>
-			<version>${cxf.version}</version>
-		</dependency>
-		<!-- SOAP end -->
-
-		<!-- JAX-RS begin -->
-		<dependency>
-			<groupId>org.apache.cxf</groupId>
-			<artifactId>cxf-rt-frontend-jaxrs</artifactId>
-			<version>${cxf.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.jaxrs</groupId>
-			<artifactId>jackson-jaxrs-json-provider</artifactId>
-			<version>${jackson.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<!-- JAX-RS end -->
-
-		<!-- JMS begin -->
-		<dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-core</artifactId>
-			<version>${activemq.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.activemq.protobuf</groupId>
-					<artifactId>activemq-protobuf</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework.osgi</groupId>
-					<artifactId>spring-osgi-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.osgi</groupId>
-					<artifactId>org.osgi.core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.fusesource.mqtt-client</groupId>
-					<artifactId>mqtt-client</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- JMS end -->
 
 		<!-- TIMER -->
 		<dependency>
@@ -380,14 +286,6 @@
 			<artifactId>quartz</artifactId>
 			<version>${quartz.version}</version>
 		</dependency>
-
-		<!-- NOSQL begin -->
-		<dependency>
-			<groupId>redis.clients</groupId>
-			<artifactId>jedis</artifactId>
-			<version>${jedis.version}</version>
-		</dependency>
-		<!-- NOSQL end -->
 
 		<!-- CACHE begin -->
 		<!-- memcached -->
@@ -405,46 +303,7 @@
 		</dependency>
 		<!-- CACHE end -->
 
-		<!-- jolokia Restful JMX begin -->
-		<dependency>
-			<groupId>org.jolokia</groupId>
-			<artifactId>jolokia-core</artifactId>
-			<version>${jolokia.version}</version>
-		</dependency>
-		<!-- jolokia end -->
-
 		<!-- hystrix begin -->
-		<dependency>
-			<groupId>com.netflix.hystrix</groupId>
-			<artifactId>hystrix-core</artifactId>
-			<version>${hystrix.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- hystrix end -->
-
-		<!-- Monitor begin -->
-		<!-- javasimon -->
-		<dependency>
-			<groupId>org.javasimon</groupId>
-			<artifactId>javasimon-spring</artifactId>
-			<version>${javasimon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.javasimon</groupId>
-			<artifactId>javasimon-jdbc4</artifactId>
-			<version>${javasimon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.javasimon</groupId>
-			<artifactId>javasimon-console-embed</artifactId>
-			<version>${javasimon.version}</version>
-		</dependency>
-		<!-- Monitor end -->
 
 		<!-- JSR303 Bean Validator -->
 		<dependency>
@@ -505,14 +364,6 @@
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>${logback.version}</version>
-		</dependency>
-
-		<!-- log4jdbc -->
-		<dependency>
-			<groupId>com.googlecode.log4jdbc</groupId>
-			<artifactId>log4jdbc</artifactId>
-			<version>1.2</version>
-			<scope>runtime</scope>
 		</dependency>
 		<!-- LOGGING end -->
 
@@ -609,18 +460,6 @@
 			</exclusions>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.3.2</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 		<!-- template engine -->
 		<dependency>
 			<groupId>org.freemarker</groupId>
@@ -659,32 +498,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- mockito -->
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-module-junit4</artifactId>
-			<version>${powermock.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
-			<version>${powermock.version}</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.mockito</groupId>
-					<artifactId>mockito-all</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 		<!-- spring -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -692,69 +505,6 @@
 			<version>${spring.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- selenium 2.0 -->
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
-			<version>${selenium.version}</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.seleniumhq.selenium</groupId>
-					<artifactId>selenium-android-driver</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.seleniumhq.selenium</groupId>
-					<artifactId>selenium-iphone-driver</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.seleniumhq.selenium</groupId>
-					<artifactId>selenium-htmlunit-driver</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.seleniumhq.selenium</groupId>
-					<artifactId>selenium-safari-driver</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-remote-driver</artifactId>
-			<version>${selenium.version}</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>cglib</groupId>
-					<artifactId>cglib-nodep</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<!-- h2 -->
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>${h2.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- redis simulator -->
-		<dependency>
-			<groupId>com.lordofthejars</groupId>
-			<artifactId>nosqlunit-redis</artifactId>
-			<version>${nosqlunit.version}</version>
-			<scope>test</scope>
-		</dependency>
-
 		<!-- memcached simulator -->
 		<dependency>
 			<groupId>com.thimbleware.jmemcached</groupId>
@@ -791,15 +541,14 @@
 		<plugins>
 			<!-- compiler插件, 设定JDK版本 -->
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<showWarnings>true</showWarnings>
+					<source>1.7</source>
+					<target>1.7</target>
 				</configuration>
 			</plugin>
+
 			<!-- enforcer plugins -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -875,14 +624,19 @@
 
 			<!-- war打包插件, 设定war包名称不带版本号 -->
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.4</version>
 				<configuration>
+					<overlays>
+						<overlay />
+						<overlay>
+							<groupId>org.cometd.javascript</groupId>
+							<artifactId>cometd-javascript-jquery</artifactId>
+						</overlay>
+					</overlays>
 					<warName>${project.artifactId}</warName>
 				</configuration>
 			</plugin>
-
 			<!-- jar打包相关插件 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -916,6 +670,17 @@
 				<version>2.5.1</version>
 			</plugin>
 			<!-- jetty插件 -->
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.2.5.v20141112</version>
+				<configuration>
+					<scanIntervalSeconds>10</scanIntervalSeconds>
+					<webAppConfig>
+						<contextPath>/commonp</contextPath>
+					</webAppConfig>
+				</configuration>
+			</plugin>
 			<!-- tomcat插件 -->
 			<plugin>
 				<groupId>org.apache.tomcat.maven</groupId>

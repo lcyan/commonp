@@ -1,8 +1,6 @@
 package com.molloc.app.entity;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -35,16 +33,16 @@ public class JsonResult implements Serializable
 
 	private String url;
 
-	private Map<String, Object> data = new HashMap<String, Object>();
+	private Object data;
 
-	public void set(String key, Object value)
-	{
-		data.put(key, value);
-	}
-
-	public Map<String, Object> getData()
+	public Object getData()
 	{
 		return data;
+	}
+
+	public void setData(Object data)
+	{
+		this.data = data;
 	}
 
 	public int getResult()

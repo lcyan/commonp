@@ -13,6 +13,8 @@ public class User
 
 	// FIXME id
 
+	private Long id;
+
 	@NotEmpty(message = "{user.name.not.empty}")
 	private String name;
 
@@ -52,6 +54,16 @@ public class User
 	public void setEmail(String email)
 	{
 		this.email = email;
+	}
+
+	public Long getId()
+	{
+		return id;
+	}
+
+	public void setId(Long id)
+	{
+		this.id = id;
 	}
 
 }

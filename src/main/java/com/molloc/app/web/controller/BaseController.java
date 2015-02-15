@@ -1,6 +1,8 @@
 package com.molloc.app.web.controller;
 
+import java.beans.PropertyEditorSupport;
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.servlet.ServletContext;
 
@@ -10,8 +12,11 @@ import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 
 import com.molloc.app.entity.User;
+import com.molloc.app.web.utils.DateUtils;
 import com.molloc.app.web.utils.JsonMapper;
 
 public abstract class BaseController implements Serializable
@@ -21,10 +26,26 @@ public abstract class BaseController implements Serializable
 	 * 
 	 */
 	private static final long serialVersionUID = 6085005793397220224L;
-	private transient final Logger logger = LoggerFactory.getLogger(getClass());
+	protected transient final Logger logger = LoggerFactory.getLogger(getClass());
+	
+	protected static final String FILE_UPLOADED_PATH = "/static/uploaded";
 
 	@Autowired
 	protected ServletContext servletContext;
+
+	@InitBinder
+	protected void initBinder(WebDataBinder binder)
+	{
+		// Date 类型转换
+		binder.registerCustomEditor(Date.class, new PropertyEditorSupport()
+		{
+			@Override
+			public void setAsText(String text)
+			{
+				setValue(DateUtils.parseDate(text));
+			}
+		});
+	}
 
 	/**
 	 * 获取Session

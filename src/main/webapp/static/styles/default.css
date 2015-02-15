@@ -1,0 +1,55 @@
+body {
+	font-family: "微软雅黑", "黑体", "宋体", Tahoma, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	padding-top: 70px;
+}
+h1, h2, h3, h4, input, textarea, button, input[type='submit'] {
+	font-family: "微软雅黑", "黑体", Tahoma, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+td{
+	text-align:left;
+}
+
+/* header */
+#header {
+	margin-bottom: 15px;
+}
+
+.navbar-header a {
+	color: #658A16 !important;
+	text-decoration: none
+}
+
+#header h1 small {
+	color: #BACE87;
+}
+
+/* footer */
+#footer {
+	margin-top: 15px;
+	padding: 15px 0px 0px 0px;
+	font-size: 95%;
+	text-align: center;
+	border-top: 2px solid #658A16;
+}
+
+#footer a {
+	color: #999;
+}
+
+.fileinput-button {
+	position: relative;
+	overflow: hidden;
+}
+
+.fileinput-button input {
+	position: absolute;
+	top: 0;
+	right: 0;
+	margin: 0;
+	opacity: 0;
+	-ms-filter: 'alpha(opacity=0)';
+	font-size: 200px;
+	direction: ltr;
+	cursor: pointer;
+}

@@ -1,5 +1,7 @@
 package com.molloc.app.entity;
 
+import java.util.Date;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,6 +27,18 @@ public class User
 	@NotEmpty(message = "{user.email.not.empty}")
 	@Email(message = "{user.email.invalid}")
 	private String email;
+
+	private String loginName;
+
+	private String nickName;
+
+	private String password;
+
+	private String salt;
+
+	private String state;
+
+	private Date createdTime;
 
 	public String getName()
 	{
@@ -64,6 +78,66 @@ public class User
 	public void setId(Long id)
 	{
 		this.id = id;
+	}
+
+	public String getLoginName()
+	{
+		return loginName;
+	}
+
+	public void setLoginName(String loginName)
+	{
+		this.loginName = loginName;
+	}
+
+	public String getNickName()
+	{
+		return nickName;
+	}
+
+	public void setNickName(String nickName)
+	{
+		this.nickName = nickName;
+	}
+
+	public String getPassword()
+	{
+		return password;
+	}
+
+	public void setPassword(String password)
+	{
+		this.password = password;
+	}
+
+	public String getSalt()
+	{
+		return salt;
+	}
+
+	public void setSalt(String salt)
+	{
+		this.salt = salt;
+	}
+
+	public String getState()
+	{
+		return state;
+	}
+
+	public void setState(String state)
+	{
+		this.state = state;
+	}
+
+	public Date getCreatedTime()
+	{
+		return createdTime;
+	}
+
+	public void setCreatedTime(Date createdTime)
+	{
+		this.createdTime = createdTime;
 	}
 
 }

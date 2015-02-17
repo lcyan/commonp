@@ -29,6 +29,8 @@ public abstract class BaseController implements Serializable
 	protected transient final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	protected static final String FILE_UPLOADED_PATH = "/static/uploaded";
+	
+	protected static final String PAGE_SIZE = "5";
 
 	@Autowired
 	protected ServletContext servletContext;

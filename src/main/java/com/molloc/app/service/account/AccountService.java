@@ -1,10 +1,16 @@
 package com.molloc.app.service.account;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +21,9 @@ import com.molloc.app.service.ServiceException;
 import com.molloc.app.service.account.ShiroDbRealm.ShiroUser;
 import com.molloc.app.web.utils.Clock;
 import com.molloc.app.web.utils.DigestUtils;
+import com.molloc.app.web.utils.DynamicSpecifications;
 import com.molloc.app.web.utils.EncodeUtils;
+import com.molloc.app.web.utils.SearchFilter;
 
 @Service
 @Transactional
@@ -42,7 +50,7 @@ public class AccountService extends BaseService
 	 */
 	public List<User> getAllUser()
 	{
-		return (List<User>) userRepository.findAll();
+		return userRepository.findAll();
 	}
 
 	/**
@@ -133,6 +141,46 @@ public class AccountService extends BaseService
 
 		byte[] hashPassword = DigestUtils.sha1(user.getLoginPwd().getBytes(), salt, HASH_INTERATIONS);
 		user.setLoginPwd(EncodeUtils.encodeHex(hashPassword));
+	}
+
+	/**
+	 * 查询所有用户带分页
+	 * 
+	 * @param searchParams
+	 * @param pageNumber
+	 * @param pageSize
+	 * @param sortType
+	 * @return
+	 */
+	public Page<User> getAllUserByPage(Map<String, Object> searchParams, int pageNumber, int pageSize, String sortType)
+	{
+		PageRequest pageRequest = buildPageRequest(pageNumber, pageSize, sortType);
+		Specification<User> spec = buildSpecification(searchParams);
+		return userRepository.findAll(spec, pageRequest);
+	}
+
+	private Specification<User> buildSpecification(Map<String, Object> searchParams)
+	{
+		Map<String, SearchFilter> filters = SearchFilter.parse(searchParams);
+		Specification<User> spec = DynamicSpecifications.bySearchFilter(filters.values(), User.class);
+		return spec;
+	}
+
+	/**
+	 * 创建分页请求.
+	 */
+	private PageRequest buildPageRequest(int pageNumber, int pageSize, String sortType)
+	{
+		Sort sort = null;
+		if ("auto".equals(sortType))
+		{
+			sort = new Sort(Direction.DESC, "id");
+		} else if ("email".equals(sortType))
+		{
+			sort = new Sort(Direction.ASC, "email");
+		}
+
+		return new PageRequest(pageNumber - 1, pageSize, sort);
 	}
 
 }

@@ -42,7 +42,7 @@ public class ShiroDbRealm extends AuthorizingRealm
 		User user = new User();
 		byte[] salt = EncodeUtils.decodeHex(user.getSalt());
 		return new SimpleAuthenticationInfo(new ShiroUser(user.getId(), user.getLoginName(), user.getName()),
-				user.getPassword(), ByteSource.Util.bytes(salt), getName());
+				user.getLoginPwd(), ByteSource.Util.bytes(salt), getName());
 	}
 
 	/**

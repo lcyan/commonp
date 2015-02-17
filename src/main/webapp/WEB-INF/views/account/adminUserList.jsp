@@ -13,17 +13,18 @@
 		<div id="message" class="alert alert-success"><button data-dismiss="alert" class="close">×</button>${message}</div>
 	</c:if>
 	
-	<table id="contentTable" class="table table-striped table-bordered table-condensed">
-		<thead><tr><th>登录名</th><th>用户名</th><th>注册时间<th>管理</th></tr></thead>
+	<table id="contentTable" class="table table-striped table-hover">
+		<thead><tr><th>登录名</th><th>用户名</th><th>邮箱</th><th>注册时间<th>管理</th></tr></thead>
 		<tbody>
 		<c:forEach items="${users}" var="user">
 			<tr>
-				<td><a href="${ctx}/admin/user/update/${user.id}">${user.loginName}</a></td>
-				<td>${user.name}</td>
+				<td><a href="${ctx}/admin/users/update/${user.id}">${user.loginName}</a></td>
+				<td>${user.nickName}</td>
+				<td>${user.email}</td>
 				<td>
-					<fmt:formatDate value="${user.registerDate}" pattern="yyyy年MM月dd日  HH时mm分ss秒" />
+					<fmt:formatDate value="${user.createdTime}" pattern="yyyy年MM月dd日  HH时mm分ss秒" />
 				</td>
-				<td><a href="${ctx}/admin/user/delete/${user.id}">删除</a></td>
+				<td><a href="${ctx}/admin/users/delete/${user.id}">删除</a></td>
 			</tr>
 		</c:forEach>
 		</tbody>

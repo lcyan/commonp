@@ -20,7 +20,7 @@
 		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
 		<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice" />
 	</context:component-scan>
-	
+
 	<aop:aspectj-autoproxy proxy-target-class="true" />
 
 	<!-- JSR303 Validator定义 -->
@@ -34,4 +34,92 @@
 		<property name="cacheSeconds" value="0" />
 		<property name="defaultEncoding" value="UTF-8" />
 	</bean>
+
+	<!-- druid dataSource -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+		<!-- 基本属性 url、user、password -->
+		<property name="url" value="${connection.url}" />
+		<property name="username" value="${connection.username}" />
+		<property name="password" value="${connection.password}" />
+
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="${druid.initialSize}" />
+		<property name="minIdle" value="${druid.minIdle}" />
+		<property name="maxActive" value="${druid.maxActive}" />
+
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="${druid.maxWait}" />
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="${druid.timeBetweenEvictionRunsMillis}" />
+
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="${druid.minEvictableIdleTimeMillis}" />
+
+		<property name="validationQuery" value="${druid.validationQuery}" />
+		<property name="testWhileIdle" value="${druid.testWhileIdle}" />
+		<property name="testOnBorrow" value="${druid.testOnBorrow}" />
+		<property name="testOnReturn" value="${druid.testOnReturn}" />
+
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 如果用Oracle，则把poolPreparedStatements配置为true，mysql可以配置为false。 -->
+		<property name="poolPreparedStatements" value="${druid.poolPreparedStatements}" />
+		<property name="maxPoolPreparedStatementPerConnectionSize" value="${druid.maxPoolPreparedStatementPerConnectionSize}" />
+
+		<!-- 配置监控统计拦截的filters -->
+		<property name="filters" value="${druid.filters}" />
+	</bean>
+	
+	<!-- Jpa Entity Manager 配置 -->
+	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="com.molloc.app" />
+		<property name="persistenceProviderClass" value="org.hibernate.jpa.HibernatePersistenceProvider" />
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="generateDdl" value="true" />
+				<property name="database" value="${jpa.database}" />
+				<property name="databasePlatform" value="${jpa.databasePlatform}" />
+				<property name="showSql" value="${jpa.showSql}" />
+			</bean>
+		</property>
+		<property name="jpaPropertyMap">
+			<map>
+				<!-- 使用自定义的validator进行jsr303验证 -->
+				<entry key="javax.persistence.validation.factory" value-ref="validator" />
+				<!-- jsr303验证模式 因为其要么验证 要么不验证 不能按照规则走 所以此处禁用 -->
+				<!-- #http://docs.jboss.org/hibernate/entitymanager/3.6/reference/en/html/configuration.html -->
+				<entry key="javax.persistence.validation.mode" value="NONE" />
+
+				<!-- 只扫描class文件，不扫描hbm，默认两个都搜索 -->
+				<entry key="hibernate.archive.autodetection" value="class" />
+				<!-- 不检查@NamedQuery -->
+				<entry key="hibernate.ejb.naming_strategy" value="${hibernate.ejb.naming_strategy}"/>
+				<entry key="hibernate.query.startup_check" value="false" />
+				<entry key="hibernate.query.substitutions" value="${hibernate.query.substitutions}" />
+				<entry key="hibernate.default_batch_fetch_size" value="${hibernate.default_batch_fetch_size}" />
+				<entry key="hibernate.max_fetch_depth" value="${hibernate.max_fetch_depth}" />
+				<entry key="hibernate.generate_statistics" value="${hibernate.generate_statistics}" />
+				<entry key="hibernate.bytecode.use_reflection_optimizer" value="${hibernate.bytecode.use_reflection_optimizer}" />
+				<entry key="hibernate.cache.use_second_level_cache" value="${hibernate.cache.use_second_level_cache}" />
+				<entry key="hibernate.cache.use_query_cache" value="${hibernate.cache.use_query_cache}" />
+				<entry key="hibernate.cache.region.factory_class" value="${hibernate.cache.region.factory_class}" />
+				<entry key="net.sf.ehcache.configurationResourceName" value="${net.sf.ehcache.configurationResourceName}" />
+				<entry key="hibernate.cache.use_structured_entries" value="${hibernate.cache.use_structured_entries}" />
+			</map>
+		</property>
+	</bean>
+
+	<!-- Spring Data Jpa配置 -->
+	<jpa:repositories base-package="com.molloc.app" entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="" />
+   
+	<!-- Jpa 事务配置 -->
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory"/>
+		<property name="jpaDialect">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+		</property>
+	</bean>
+
+	<!-- 使用annotation定义事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+
 </beans>

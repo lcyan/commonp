@@ -2,42 +2,51 @@ package com.molloc.app.entity;
 
 import java.util.Date;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @XmlRootElement(name = "user")
+@Entity
+@Table(name = "ss_user")
 public class User
 {
-
-	// FIXME id
-
+	/**
+	 * 
+	 */
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@NotEmpty(message = "{user.name.not.empty}")
 	private String name;
 
-	@Min(value = 1, message = "{user.age.invalid}")
-	@Max(value = 200, message = "{user.age.invalid}")
 	private int age;
 
-	@NotEmpty(message = "{user.email.not.empty}")
-	@Email(message = "{user.email.invalid}")
 	private String email;
 
 	private String loginName;
 
 	private String nickName;
 
-	private String password;
+	private String loginPwd;
 
 	private String salt;
 
 	private String state;
 
+	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@Temporal(TemporalType.TIMESTAMP)
+	@OrderBy()
 	private Date createdTime;
 
 	public String getName()
@@ -70,16 +79,6 @@ public class User
 		this.email = email;
 	}
 
-	public Long getId()
-	{
-		return id;
-	}
-
-	public void setId(Long id)
-	{
-		this.id = id;
-	}
-
 	public String getLoginName()
 	{
 		return loginName;
@@ -100,14 +99,14 @@ public class User
 		this.nickName = nickName;
 	}
 
-	public String getPassword()
+	public String getLoginPwd()
 	{
-		return password;
+		return loginPwd;
 	}
 
-	public void setPassword(String password)
+	public void setLoginPwd(String loginPwd)
 	{
-		this.password = password;
+		this.loginPwd = loginPwd;
 	}
 
 	public String getSalt()
@@ -130,6 +129,17 @@ public class User
 		this.state = state;
 	}
 
+	public Long getId()
+	{
+		return id;
+	}
+
+	public void setId(Long id)
+	{
+		this.id = id;
+	}
+
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8:00")
 	public Date getCreatedTime()
 	{
 		return createdTime;

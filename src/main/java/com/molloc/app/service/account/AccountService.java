@@ -98,6 +98,8 @@ public class AccountService extends BaseService
 		if (StringUtils.isNotBlank(user.getLoginPwd()))
 		{
 			encryptPassword(user);
+		}else{
+			user.setLoginPwd(null);
 		}
 		userRepository.save(user);
 	}
@@ -147,9 +149,9 @@ public class AccountService extends BaseService
 	 * 查询所有用户带分页
 	 * 
 	 * @param searchParams
-	 * @param pageNumber
-	 * @param pageSize
-	 * @param sortType
+	 * @param pageNumber 第几页
+	 * @param pageSize 每页显示条数
+	 * @param sortType 排序规则
 	 * @return
 	 */
 	public Page<User> getAllUserByPage(Map<String, Object> searchParams, int pageNumber, int pageSize, String sortType)

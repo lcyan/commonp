@@ -30,6 +30,9 @@
 		</div>
 		<%@ include file="/WEB-INF/layouts/footer.jsp"%>
 	</div>
+	<script src="${ctx}/static/js/validation/jquery.validate.min.js" type="text/javascript"></script>
+	<script src="${ctx}/static/js/validation/additional-methods.js" type="text/javascript"></script>
+	<script src="${ctx}/static/js/validation/localization/messages_zh.min.js" type="text/javascript"></script>
 	<script src="${ctx}/static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 </body>
 </html>

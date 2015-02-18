@@ -9,43 +9,43 @@
 </head>
 
 <body>
-	<form id="inputForm" action="${ctx}/admin/user/update" method="post" class="form-horizontal">
+	<form id="inputForm" action="${ctx}/admin/users/update" method="post" class="form-horizontal">
 		<input type="hidden" name="id" value="${user.id}"/>
 		<fieldset>
 			<legend><small>用户管理</small></legend>
-			<div class="control-group">
-				<label class="control-label">登录名:</label>
-				<div class="controls">
-					<input type="text" value="${user.loginName}" class="input-large" disabled="" />
+			<div class="form-group">
+				<label class="col-sm-2 control-label">登录名:</label>
+				<div class="col-sm-10">
+					<input type="text" value="${user.loginName}" class="form-control" disabled="" />
 				</div>
 			</div>
-			<div class="control-group">
-				<label class="control-label">用户名:</label>
-				<div class="controls">
-					<input type="text" id="name" name="name" value="${user.name}" class="input-large required"/>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">用户名:</label>
+				<div class="col-sm-10">
+					<input type="text" id="name" name="name" value="${user.name}" class="form-control required"/>
 				</div>
 			</div>
-			<div class="control-group">
-				<label for="plainPassword" class="control-label">密码:</label>
-				<div class="controls">
-					<input type="password" id="plainPassword" name="plainPassword" class="input-large" placeholder="...Leave it blank if no change"/>
+			<div class="form-group">
+				<label for="plainPassword" class="col-sm-2 control-label">密码:</label>
+				<div class="col-sm-10">
+					<input type="password" id="id_loginPwd" name="loginPwd" class="form-control" placeholder="...Leave it blank if no change"/>
 				</div>
 			</div>
-			<div class="control-group">
-				<label for="confirmPassword" class="control-label">确认密码:</label>
-				<div class="controls">
-					<input type="password" id="confirmPassword" name="confirmPassword" class="input-large" equalTo="#plainPassword" />
+			<div class="form-group">
+				<label for="confirmPassword" class="col-sm-2 control-label">确认密码:</label>
+				<div class="col-sm-10">
+					<input type="password" id="confirmPassword" name="confirmPassword" class="form-control" equalTo="#id_loginPwd" />
 				</div>
 			</div>
-			<div class="control-group">
-				<label class="control-label">注册日期:</label>
-				<div class="controls">
-					<span class="help-inline" style="padding:5px 0px"><fmt:formatDate value="${user.registerDate}" pattern="yyyy年MM月dd日  HH时mm分ss秒" /></span>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">注册日期:</label>
+				<div class="col-sm-10">
+					<span class="help-block" ><fmt:formatDate value="${user.createdTime}" pattern="yyyy年MM月dd日  HH时mm分ss秒" /></span>
 				</div>
 			</div>
-			<div class="form-actions">
-				<input id="submit_btn" class="btn btn-primary" type="submit" value="提交"/>&nbsp;	
-				<input id="cancel_btn" class="btn" type="button" value="返回" onclick="history.back()"/>
+			<div class="form-group">
+				<input id="submit_btn" class="btn btn-primary col-sm-offset-3 col-sm-3" type="submit" value="提交"/>&nbsp;	
+				<input id="cancel_btn" class="btn col-sm-offset-1 col-sm-3" type="button" value="返回" onclick="history.back()"/>
 			</div>
 		</fieldset>
 	</form>

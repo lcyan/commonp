@@ -6,9 +6,11 @@
 </head>
 <body>
 <h1>
-	Hello world!  
+	login successful.  
 </h1>
-
-<P>  The time on the server is ${serverTime}. </P>
+	<c:if test="${not empty message}">
+			<div id="message" class="alert alert-success"><button data-dismiss="alert" class="close">×</button>${message}</div>
+	</c:if>
+<P>${loginUser}</P>
 </body>
 </html>

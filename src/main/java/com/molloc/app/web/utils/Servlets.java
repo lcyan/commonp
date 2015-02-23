@@ -11,6 +11,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.springframework.util.CollectionUtils;
 
@@ -214,7 +215,12 @@ public class Servlets
 				queryStringBuilder.append('&');
 			}
 		}
-		return queryStringBuilder.toString();
+		String queryString = queryStringBuilder.toString();
+		if (StringUtils.endsWith(queryString, "&"))
+		{
+			StringUtils.chop(queryString);
+		}
+		return queryString;
 	}
 
 	/**

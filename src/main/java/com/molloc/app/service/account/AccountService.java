@@ -95,11 +95,9 @@ public class AccountService extends BaseService
 	 */
 	public void updateUser(User user)
 	{
-		if (StringUtils.isNotBlank(user.getLoginPwd()))
+		if (StringUtils.isNotBlank(user.getPlainPwd()))
 		{
 			encryptPassword(user);
-		}else{
-			user.setLoginPwd(null);
 		}
 		userRepository.save(user);
 	}

@@ -1,19 +1,23 @@
 package com.molloc.app.service.account;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
+import org.springframework.beans.BeanUtils;
 
 import com.google.common.base.Objects;
 import com.molloc.app.entity.User;
@@ -30,19 +34,20 @@ public class ShiroDbRealm extends AuthorizingRealm
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException
 	{
-		//UsernamePasswordToken token = (UsernamePasswordToken) authcToken;
-		// User user = accountService.findUserByLoginName(token.getUsername());
-		// if (user != null) {
-		// byte[] salt = Encodes.decodeHex(user.getSalt());
-		// return new SimpleAuthenticationInfo(new ShiroUser(user.getId(), user.getLoginName(), user.getName()),
-		// user.getPassword(), ByteSource.Util.bytes(salt), getName());
-		// } else {
-		// return null;
-		// }
-		User user = new User();
-		byte[] salt = EncodeUtils.decodeHex(user.getSalt());
-		return new SimpleAuthenticationInfo(new ShiroUser(user.getId(), user.getLoginName(), user.getName()),
-				user.getLoginPwd(), ByteSource.Util.bytes(salt), getName());
+		UsernamePasswordToken token = (UsernamePasswordToken) authcToken;
+		User user = accountService.findUserByLoginName(StringUtils.trim(token.getUsername()));
+		if (null != user)
+		{
+			user.setLastLogonDate(new Date());
+			accountService.updateUser(user);// 更新最后登陆时间
+			byte[] salt = EncodeUtils.decodeHex(user.getSalt());
+			User shiroUser = new User();
+			BeanUtils.copyProperties(user, shiroUser);
+			return new SimpleAuthenticationInfo(shiroUser, user.getLoginPwd(), ByteSource.Util.bytes(salt), getName());
+		} else
+		{
+			return null;
+		}
 	}
 
 	/**
@@ -51,9 +56,10 @@ public class ShiroDbRealm extends AuthorizingRealm
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals)
 	{
-		//ShiroUser shiroUser = (ShiroUser) principals.getPrimaryPrincipal();
+		// ShiroUser shiroUser = (ShiroUser) principals.getPrimaryPrincipal();
 		// User user = accountService.findUserByLoginName(shiroUser.loginName);
 		SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+		info.addStringPermission("*");
 		// info.addRoles(user.getRoleList());
 		return info;
 	}

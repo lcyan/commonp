@@ -28,13 +28,13 @@
 			<div class="form-group">
 				<label for="plainPassword" class="col-sm-2 control-label">密码:</label>
 				<div class="col-sm-10">
-					<input type="password" id="id_loginPwd" name="loginPwd" class="form-control" placeholder="...Leave it blank if no change"/>
+					<input type="password" id="id_plainPwd" name="plainPwd" class="form-control" placeholder="...Leave it blank if no change"/>
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="confirmPassword" class="col-sm-2 control-label">确认密码:</label>
 				<div class="col-sm-10">
-					<input type="password" id="confirmPassword" name="confirmPassword" class="form-control" equalTo="#id_loginPwd" />
+					<input type="password" id="confirmPassword" name="confirmPassword" class="form-control" equalTo="#id_plainPwd" />
 				</div>
 			</div>
 			<div class="form-group">

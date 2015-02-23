@@ -23,7 +23,12 @@
 		<property name="successUrl" value="/" />
 		<property name="filterChainDefinitions">
 			<value>
-				/** = anon
+				/login = authc
+				/logout = logout
+				/favicon.ico = anon
+				/static/** = anon
+				/WEB-INF/views/error/* = anon
+				/** = authc
 			</value>
 		</property>
 	</bean>

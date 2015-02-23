@@ -31,6 +31,10 @@ public abstract class BaseController implements Serializable
 	protected static final String FILE_UPLOADED_PATH = "/static/uploaded";
 	
 	protected static final String PAGE_SIZE = "5";
+	
+	protected static final String SESSION_KEY_LOGIN_USER = "loginUser";
+	
+	protected static final String SESSION_KEY_REDIRECT_MESSAGE = "message";
 
 	@Autowired
 	protected ServletContext servletContext;

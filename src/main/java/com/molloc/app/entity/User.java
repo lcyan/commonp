@@ -10,11 +10,13 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @XmlRootElement(name = "user")
 @Entity
@@ -39,6 +41,10 @@ public class User
 	private String nickName;
 
 	private String loginPwd;
+	
+	@Transient
+	@JsonIgnore
+	private String plainPwd;//明文密码
 
 	private String salt;
 
@@ -48,6 +54,11 @@ public class User
 	@Temporal(TemporalType.TIMESTAMP)
 	@OrderBy()
 	private Date createdTime;
+
+	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@Temporal(TemporalType.TIMESTAMP)
+	@OrderBy()
+	private Date lastLogonDate;
 
 	public String getName()
 	{
@@ -149,5 +160,28 @@ public class User
 	{
 		this.createdTime = createdTime;
 	}
+
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8:00")
+	public Date getLastLogonDate()
+	{
+		return lastLogonDate;
+	}
+
+	public void setLastLogonDate(Date lastLogonDate)
+	{
+		this.lastLogonDate = lastLogonDate;
+	}
+	
+	public String getPlainPwd()
+	{
+		return plainPwd;
+	}
+
+	public void setPlainPwd(String plainPwd)
+	{
+		this.plainPwd = plainPwd;
+	}
+	
+	
 
 }

@@ -43,6 +43,9 @@
 		directory -->
 	<mvc:resources mapping="/static/**" location="/static/" />
 
+	<!-- 定义无需Controller的url -->
+	<mvc:view-controller path="/" view-name="redirect:/home" />
+
 	<mvc:default-servlet-handler />
 
 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
@@ -54,7 +57,7 @@
 		<property name="prefix" value="/WEB-INF/views/" />
 		<property name="suffix" value=".jsp" />
 	</bean>
-	
+
 	<!-- 将Controller抛出的异常转到特定View, 保持SiteMesh的装饰效果 -->
 	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
 		<property name="exceptionMappings">

@@ -139,7 +139,7 @@ public class AccountService extends BaseService
 		byte[] salt = DigestUtils.generateSalt(SALT_SIZE);
 		user.setSalt(EncodeUtils.encodeHex(salt));
 
-		byte[] hashPassword = DigestUtils.sha1(user.getLoginPwd().getBytes(), salt, HASH_INTERATIONS);
+		byte[] hashPassword = DigestUtils.sha1(user.getPlainPwd().getBytes(), salt, HASH_INTERATIONS);
 		user.setLoginPwd(EncodeUtils.encodeHex(hashPassword));
 	}
 

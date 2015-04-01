@@ -25,13 +25,13 @@
 		<div class="form-group">
 			<label for="username" class="col-sm-offset-2 col-sm-2 control-label">名称:</label>
 			<div class="col-sm-4">
-				<input type="text" id="username" name="username"  value="${username}" class="form-control required"/>
+				<input type="text" id="username" name="username"  value="admin" class="form-control required"/>
 			</div>
 		</div>
 		<div class="form-group">
 			<label for="password" class="col-sm-offset-2 col-sm-2 control-label">密码:</label>
 			<div class="col-sm-4">
-				<input type="password" id="password" name="password" class="form-control required"/>
+				<input type="password" id="password" name="password" value="admin" class="form-control required"/>
 			</div>
 		</div>
 				

@@ -8,6 +8,7 @@
 <html>
 <head>
 	<title>登录页</title>
+	<script type="text/javascript" src="${ctx}/static/js/sys/login.js"></script>
 </head>
 
 <body>
@@ -16,8 +17,8 @@
 		String error = (String) request.getAttribute(FormAuthenticationFilter.DEFAULT_ERROR_KEY_ATTRIBUTE_NAME);
 		if(error != null){
 		%>
-			<div class="alert alert-error input-medium controls">
-				<button class="close" data-dismiss="alert">×</button>登录失败，请重试.
+			<div class="col-sm-offset-4 alert alert-error input-medium controls">
+				登录失败，请重试.
 			</div>
 		<%
 		}

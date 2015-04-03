@@ -20,12 +20,15 @@
 	</appender>
 
 	<logger name="org.springframework.beans.factory">
-		<level value="info" />
+		<level value="debug" />
 	</logger>
 	<logger name="org.springframework.orm">
 		<level value="debug" />
 	</logger>
 	<logger name="org.springframework.data.jpa">
+		<level value="debug" />
+	</logger>
+	<logger name="org.springframework.scheduling">
 		<level value="debug" />
 	</logger>
 	<logger name="org.cometd">

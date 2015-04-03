@@ -19,7 +19,29 @@
 	  <script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 	  <script src="http://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
 	<![endif]-->
-	<script src="${ctx}/static/js/jquery-1.9.1.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		window.COMMONP = {ctx: '${ctx}'};
+	</script>
+	<script type="text/javascript" src="${ctx}/static/js/require.js"></script>
+	<script type="text/javascript">
+		require.config({
+			baseUrl: COMMONP.ctx + '/static/js',
+			paths: {
+				jquery: 'jquery-1.9.1.min',
+				'jquery.validate': 'validation/jquery.validate',
+				'jquery.validate.min': 'validation/jquery.validate',
+				validation_ext: 'validation/additional-methods.min',
+				validation_i18n: 'validation/localization/messages_zh.min',
+				bootstrap: 'bootstrap/bootstrap.min'
+			},
+			shim: {
+				bootstrap: {
+					deps:['jquery'],
+					exports: 'bootstrap'
+				}
+			}
+		});
+	</script>
 	<sitemesh:head/>
 </head>
 
@@ -30,9 +52,5 @@
 		</div>
 		<%@ include file="/WEB-INF/layouts/footer.jsp"%>
 	</div>
-	<script src="${ctx}/static/js/validation/jquery.validate.min.js" type="text/javascript"></script>
-	<script src="${ctx}/static/js/validation/additional-methods.js" type="text/javascript"></script>
-	<script src="${ctx}/static/js/validation/localization/messages_zh.min.js" type="text/javascript"></script>
-	<script src="${ctx}/static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 </body>
 </html>

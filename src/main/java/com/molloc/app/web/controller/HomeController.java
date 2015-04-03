@@ -1,5 +1,7 @@
 package com.molloc.app.web.controller;
 
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.molloc.app.entity.User;
@@ -10,13 +12,15 @@ import com.molloc.app.entity.User;
  * @Date 2015年2月20日
  * @Version v1.0
  */
+@Controller
 public class HomeController extends BaseController
 {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -4460187877837176432L;
-
+	
+	@RequestMapping("/home")
 	public String home(RedirectAttributes redirectAttributes)
 	{
 		// 登陆成功

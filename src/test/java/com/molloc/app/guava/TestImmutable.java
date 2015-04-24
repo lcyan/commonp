@@ -1,83 +1,107 @@
 package com.molloc.app.guava;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.awt.Color;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import com.google.common.primitives.Ints;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.molloc.app.BaseTest;
 
 public class TestImmutable extends BaseTest
 {
+
 	@Test
-	public void testGuava() throws Exception
+	public void testJDKImmutable()
 	{
-		ImmutableList<String> of = ImmutableList.of("a", "b", "c", "d");
-		logger.info("{}", of);
-		ImmutableMap<String, String> map = ImmutableMap.of("key1", "value1", "key2", "value2");
-		logger.info("{}", map);
-		int a = 1;
-		int b = 3;
-		logger.info("{}", Ints.compare(a, b));
+		List<String> list = Lists.newArrayList();
+		list.add("a");
+		list.add("b");
+		list.add("c");
 
-		File file = new File("D:\\source\\molloc数据库密码和ftp密码.txt");
+		log(list);
 
-		logger.info("{}", Files.readLines(file, StandardCharsets.UTF_8));
+		List<String> unmodifiableList = Collections.unmodifiableList(list);
+		log(unmodifiableList);
 
-		List<Integer> list = ImmutableList.of(1, 2, 3, 4);
-		int[] array2 = Ints.toArray(list);
-		logger.info("{}", array2);
+		List<String> unmodifiableList1 = Collections.unmodifiableList(Arrays.asList("a", "b", "c"));
+		log(unmodifiableList1);
 
-		String digit = CharMatcher.DIGIT.retainFrom("some text 89983 and more");
-		logger.info("{}", digit);
-		String str = CharMatcher.DIGIT.removeFrom("some text 89983 and more");
-		logger.info("{}", str);
+		String temp = unmodifiableList.get(1);
+		log(String.format("unmodifiableList [1] ： %s", temp));
 
-		String testString = "foo , what,,,more,";
-		logger.info("{}", Strings.repeat("*", 40));
-		Iterable<String> split = Splitter.on(",").omitEmptyStrings().trimResults().split(testString);
-		for (String it : split)
-		{
-			logger.info("{}", it);
-		}
-		logger.info("{}", Strings.repeat("*", 40));
-		int[] array = { 1, 2, 3, 4, 5 };
-		logger.info("has Elements {}", Ints.contains(array, 2));
-		logger.info("{}", Strings.repeat("*", 40));
-		int indexOf = Ints.indexOf(array, 4);
-		int max = Ints.max(array);
-		int min = Ints.min(array);
-		int[] concat = Ints.concat(array, array2);
-		logger.info("indexOf {}, max {}, min {}, concat {}", indexOf, max, min, concat);
+		list.add("baby");
 
-		Map<String, Double> usPriceMap = Maps.newHashMap();
-		usPriceMap.put("apple", 20D);
-		usPriceMap.put("orange", 30D);
-		usPriceMap.put("rice", 40D);
+		logger.info("list add a item after list: {}", list);
+		logger.info("list add a item after unmodifiableList: {}", unmodifiableList);
 
-		Map<String, Double> cnPriceMap = Maps.transformValues(usPriceMap, new Function<Double, Double>()
-		{
-			double eurToUsd = 3;
+		unmodifiableList1.add("bb");
+		logger.info("unmodifiableList1 add a item after list: {}", unmodifiableList1);
 
-			@Override
-			public Double apply(Double input)
-			{
-				return eurToUsd * input;
-			}
-		});
-		logger.info("{}", cnPriceMap);
-		logger.info("{}", Strings.repeat("*", 40));
-	//	List<String> names = ImmutableList.of("Aleksander", "Jaran", "Integrasco", "Guava", "Java");
+		unmodifiableList.add("cc");
+		logger.info("unmodifiableList add a item after list: {}", unmodifiableList);
 	}
+
+	@Test
+	public void testGuavaImmutable()
+	{
+		List<String> list = Lists.newArrayList();
+
+		list.add("a");
+		list.add("b");
+		list.add("c");
+
+		logger.info("list ： {}", list);
+
+		ImmutableList<String> imlist = ImmutableList.copyOf(list);
+		logger.info("imlist: {}", imlist);
+
+		ImmutableList<String> imOflist = ImmutableList.of("peida", "jerry", "harry");
+		logger.info("imOflist：{}", imOflist);
+
+		ImmutableSortedSet<String> imSortedSet = ImmutableSortedSet.of("a", "b", "c", "a", "d", "b");
+		logger.info("imSortedSet：{}", imSortedSet);
+
+		list.add("baby");
+		logger.info("list add a item after list: {}", list);
+		logger.info("list add a item after imlist: {}", imlist);
+
+		ImmutableSet<Color> imColorSet = ImmutableSet.<Color> builder().add(new Color(0, 255, 255))
+				.add(new Color(0, 191, 255)).build();
+
+		logger.info("imColorSet: {}", imColorSet);
+	}
+
+	@Test
+	public void testCotyOf()
+	{
+		ImmutableSet<String> imSet = ImmutableSet.of("peida", "jerry", "harry", "lisa");
+		logger.info("imSet： {}", imSet);
+
+		ImmutableList<String> imlist = ImmutableList.copyOf(imSet);
+		logger.info("imlist： {}", imlist);
+
+		ImmutableSortedSet<String> imSortSet = ImmutableSortedSet.copyOf(imSet);
+		logger.info("imSortSet： {}", imSortSet);
+
+		List<String> list = Lists.newArrayList();
+		for (int i = 0; i < 20; i++)
+		{
+			list.add(i + "x");
+		}
+
+		logger.info("list： {}", list);
+		ImmutableList<String> imInfolist = ImmutableList.<String> copyOf(list.subList(2, 18));
+		logger.info("imInfolist： {}", imInfolist);
+		int imInfolistSize = imInfolist.size();
+		logger.info("imInfolistSize：{}", imInfolistSize);
+		ImmutableSet<String> imInfoSet = ImmutableSet.copyOf(imInfolist.subList(2, imInfolistSize - 3));
+		logger.info("imInfoSet：{}", imInfoSet);
+	}
+
 }

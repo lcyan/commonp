@@ -78,6 +78,6 @@ public class TestImmutable extends BaseTest
 		});
 		logger.info("{}", cnPriceMap);
 		logger.info("{}", Strings.repeat("*", 40));
-		List<String> names = ImmutableList.of("Aleksander", "Jaran", "Integrasco", "Guava", "Java");
+	//	List<String> names = ImmutableList.of("Aleksander", "Jaran", "Integrasco", "Guava", "Java");
 	}
 }

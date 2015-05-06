@@ -16,6 +16,6 @@ public class BaseTest
 
 	protected void logLine()
 	{
-		logger.info("{}", Strings.repeat("-----", 50));
+		logger.info("{}", Strings.repeat("--", 30));
 	}
 }

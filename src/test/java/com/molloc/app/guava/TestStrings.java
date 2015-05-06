@@ -66,6 +66,7 @@ public class TestStrings extends BaseTest
 		log(Strings.emptyToNull(""));// null
 		// isNullOrEmpty：判断字符串为null或空字符串
 		log(Strings.isNullOrEmpty(null));// true
+		log(Strings.isNullOrEmpty(" ")); //false
 		// repeat：用于将指定字符串循环拼接多次返回
 		log(Strings.repeat(string, 3));// testtesttest
 

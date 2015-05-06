@@ -90,7 +90,7 @@ public class TestPreconditions
 		}
 		try
 		{
-			checkPositionIndex(intList, 13);
+			checkPositionIndex(intList, 9);
 		} catch (Exception e)
 		{
 			System.out.println(e.getMessage());
